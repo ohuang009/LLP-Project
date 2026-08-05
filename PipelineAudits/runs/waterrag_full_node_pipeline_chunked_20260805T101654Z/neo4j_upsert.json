@@ -1,0 +1,91 @@
+{
+  "status": "upserted",
+  "database": "neo4j",
+  "graph_model": "paper_semantic_graph_v3",
+  "http_endpoint": "http://localhost:7477/",
+  "browser": "http://localhost:8767/neo4j-browser/?connectURL=bolt%3A%2F%2Flocalhost%3A7690&db=neo4j",
+  "run_id": "waterrag_full_node_pipeline_chunked_20260805T101654Z",
+  "document_id": "doc_b46a1149fcbd",
+  "entities": 46,
+  "mentions": 181,
+  "mention_nodes": 0,
+  "evidence_fragment_nodes": 0,
+  "operational_instance_nodes": 0,
+  "duplicate_canonical_keys": 0,
+  "assertions": 0,
+  "relationships": 0,
+  "traceable_relationships": 0,
+  "materialized_ontology_nodes": 0,
+  "ontology_spec_used_for_validation": {
+    "node_types": 48,
+    "predicate_types": 53
+  },
+  "ontology_alignment": {
+    "paper_entities": 46,
+    "correctly_labeled_entities": 46
+  },
+  "ontology_labels": {
+    "typed_entities": 46,
+    "ontology_labels": [
+      "AISystem",
+      "Agent",
+      "Challenge",
+      "Claim",
+      "Contaminant",
+      "DataSource",
+      "Dataset",
+      "EnvironmentalProcess",
+      "Experiment",
+      "Metric",
+      "Model",
+      "Person",
+      "Policy",
+      "Publication",
+      "ScientificConcept",
+      "SoftwareArtifact",
+      "Task",
+      "Technology",
+      "Tool",
+      "TreatmentProcess",
+      "WaterSystem"
+    ]
+  },
+  "entity_validation": {
+    "validated": 46,
+    "violations": 0,
+    "ontology_classes": [
+      "AISystem",
+      "Agent",
+      "Challenge",
+      "Claim",
+      "Contaminant",
+      "DataSource",
+      "Dataset",
+      "EnvironmentalProcess",
+      "Experiment",
+      "Metric",
+      "Model",
+      "Person",
+      "Policy",
+      "Publication",
+      "ScientificConcept",
+      "SoftwareArtifact",
+      "Task",
+      "Technology",
+      "Tool",
+      "TreatmentProcess",
+      "WaterSystem"
+    ]
+  },
+  "relationship_validation": {
+    "validated": 0,
+    "violations": 0
+  },
+  "traceability": {
+    "mentions": 181,
+    "mentions_with_exact_evidence": 181,
+    "resolved_mentions": 3,
+    "resolved_mentions_with_antecedent": 3,
+    "storage": "embedded JSON records on canonical ontology nodes"
+  }
+}

@@ -1,0 +1,2 @@
+# Install the complete supported environment.
+-r ../../requirements.txt

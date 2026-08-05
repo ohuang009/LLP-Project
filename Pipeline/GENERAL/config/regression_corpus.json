@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Guard generalized extraction quality across distinct engineered-water AI papers.",
+  "papers": [
+    {
+      "id": "llm_epanet",
+      "source_filename": "llm_epanet_2503.16191.pdf",
+      "minimum_answerable_questions": 7,
+      "minimum_relationships": 28,
+      "required_entities": [
+        ["AISystem", "LLM-EPANET"],
+        ["WaterSystem", "water distribution system"],
+        ["Method", "retrieval-augmented generation"],
+        ["Tool", "EPANET"]
+      ],
+      "forbidden_entity_names": ["Thomas", "LLM-based", "LLMbased", "openai/gpt"]
+    },
+    {
+      "id": "epanet_agentic",
+      "source_filename": "1-s2.0-S0043135426001156-main.pdf",
+      "minimum_answerable_questions": 10,
+      "minimum_relationships": 45,
+      "required_entities": [
+        ["AISystem", "EPANET-Agentic"],
+        ["Agent", "Orchestrator"],
+        ["Agent", "TaskExecutor"],
+        ["Agent", "CodeRunner"],
+        ["Agent", "DataAnalyzer"],
+        ["Tool", "EPANET"]
+      ],
+      "forbidden_entity_names": ["Thomas"]
+    },
+    {
+      "id": "waterrag",
+      "source_filename": "waterrag-a-multiagent-retrieval-augmented-generation-framework-to-support-water-industry-transitions-to-net-zero.pdf",
+      "minimum_answerable_questions": 8,
+      "minimum_relationships": 50,
+      "required_entities": [
+        ["AISystem", "WaterRAG"],
+        ["Method", "retrieval-augmented generation"]
+      ],
+      "forbidden_entity_names": ["Thomas", "LLM-based", "LLMbased"]
+    }
+  ]
+}

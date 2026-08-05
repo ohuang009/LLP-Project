@@ -1,0 +1,60 @@
+{
+  "AISystem": [
+    "EPANET-Agentic", "Hydro-Agent", "Water-MAS", "WaterRAG", "Sustain-LLaMA",
+    "BeeEcoTox", "AMR-Policy GPT", "Parakeet", "DCAI"
+  ],
+  "Model": [
+    "GPT-4", "GPT-4.1", "DeepSeek-V3", "ChemFM"
+  ],
+  "Agent": [
+    "TaskExecutor", "CodeRunner", "DataAnalyzer", "HydroCoder", "Executor",
+    "Orchestrating Agent", "Knowledge Agent", "Modelling Agent", "Modeling Agent",
+    "Coding Agent", "Planning Agent", "Execution Agent", "Checking Agent",
+    "Retrieval Agent", "Review Agent", "Evaluation Agent", "Autonomous Scheduling Agent"
+  ],
+  "Tool": [
+    "EPANET", "Python", "MATLAB", "GNNExplainer", "Raspberry Pi"
+  ],
+  "Dataset": [
+    "OneAtmos-Bench", "NORMAN", "multilingual AMR policy database"
+  ],
+  "DataSource": [],
+  "Method": [
+    "RAG", "GraphRAG", "LightRAG", "MPC", "LCA"
+  ],
+  "Task": [
+    "pump scheduling", "water distribution simulation", "hydraulic calibration",
+    "water distribution optimization", "groundwater monitoring", "irrigation scheduling",
+    "reservoir management", "life-cycle inventory extraction",
+    "emission factor recommendation", "ecotoxicity prediction", "chemical prioritization"
+  ],
+  "Domain": [],
+  "Metric": [
+    "MAE", "RMSE", "F1 score", "AUC"
+  ],
+  "Challenge": [],
+  "Location": [
+    "Shanghai", "China", "United States", "Europe"
+  ],
+  "EnvironmentalSystem": [
+    "Aquia Aquifer"
+  ],
+  "Chemical": [
+    "PFAS", "CO2", "CH4", "N2O", "methanol", "reactive oxygen species"
+  ],
+  "Organism": [
+    "Tenebrio molitor"
+  ],
+  "Process": [
+    "Fenton-like treatment"
+  ],
+  "Material": [
+    "single-atom catalyst"
+  ],
+  "PolicyDocument": [
+    "National Action Plan", "ISO 14040", "ISO 14044"
+  ],
+  "Infrastructure": [],
+  "Impact": [],
+  "Organization": []
+}

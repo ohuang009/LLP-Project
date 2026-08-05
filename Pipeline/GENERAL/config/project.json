@@ -1,0 +1,31 @@
+{
+  "project": "Engineered Water Systems Knowledge Graph",
+  "ontology_version": "2.0",
+  "parser": {
+    "mode": "narrative_text_only",
+    "include_sections": true,
+    "include_paragraphs": true,
+    "include_sentences": true,
+    "exclude_tables": true,
+    "exclude_table_cells": true,
+    "exclude_figures": true,
+    "exclude_captions": true,
+    "exclude_references_from_scientific_extraction": true,
+    "immutable_parsed_json": true
+  },
+  "extraction": {
+    "implementation_status": "node_and_relationship_pipeline_active",
+    "mode": "node_and_relationship",
+    "workbench": "http://localhost:8767/",
+    "context_policy": "target plus adjacent narrative sentences within the same section; 2-3 sentences when available",
+    "relationship_extraction": "llm_context_window_v1",
+    "pipeline_guide": "../README.md",
+    "entity_resolution_plan": "post-extraction candidate generation with human-reviewed merges"
+  },
+  "neo4j": {
+    "instance": "engineered-water-ontology",
+    "browser": "http://localhost:8767/neo4j-browser/?connectURL=bolt%3A%2F%2Flocalhost%3A7690&db=neo4j",
+    "http_endpoint": "http://localhost:7477/",
+    "bolt": "bolt://localhost:7690"
+  }
+}

@@ -1,0 +1,33 @@
+# Python caches and test state
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local scratch and generated inspection files
+tmp/
+**/tmp/
+*.inspect.ndjson
+*.log
+*.pid
+*.lock
+
+# Workbench uploads and reusable LLM response caches
+Pipeline/GENERAL/uploads/
+Pipeline/GENERAL/cache/
+Pipeline/GENERAL/output/
+Pipeline/GENERAL/outputs/
+
+# Local Neo4j distribution, databases, and generated graph assets
+LocalNeo4j/downloads/
+LocalNeo4j/runtime/
+LocalNeo4j/instances/
+LocalNeo4j/load-logs/
+LocalNeo4j/graph-assets/
+
+# Editor and desktop metadata
+.vscode/
+.idea/
+.DS_Store

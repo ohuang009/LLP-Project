@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0",
+  "llm_node_judge": {
+    "required": true,
+    "provider": "ollama",
+    "model": "llama3.1:8b-instruct-q3_K_S",
+    "base_url": "http://127.0.0.1:11434",
+    "temperature": 0,
+    "seed": 42,
+    "context_window": 32768,
+    "keep_alive": "0",
+    "batch_sentences": 4,
+    "max_output_tokens": 4096,
+    "timeout_seconds": 600,
+    "maximum_retries": 3,
+    "cache_responses": true,
+    "invalid_output_policy": "reject_and_audit"
+  },
+  "llm_relationship_judge": {
+    "required": true,
+    "provider": "ollama",
+    "model": "llama3.1:8b-instruct-q3_K_S",
+    "base_url": "http://127.0.0.1:11434",
+    "temperature": 0,
+    "seed": 42,
+    "context_window": 8192,
+    "keep_alive": "0",
+    "batch_windows": 1,
+    "max_output_tokens": 2048,
+    "timeout_seconds": 600,
+    "maximum_retries": 3,
+    "cache_responses": true,
+    "invalid_output_policy": "reject_and_audit"
+  },
+  "relationship_extraction": {
+    "strategy": "llm_context_window_v1",
+    "context_policy": "target sentence plus previous and next sentence within the same section when available",
+    "endpoint_policy": "accepted_current_paper_nodes_only",
+    "unknown_endpoint_policy": "audit_without_materializing",
+    "semantic_fallback": "none",
+    "minimum_accept_confidence": 0.75,
+    "require_observation_for_quantitative_direct_relations": true
+  },
+  "ontology_classification": {
+    "high_similarity": 0.34,
+    "minimum_similarity": 0.12
+  },
+  "entity_resolution": {
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+    "embedding_batch_size": 64,
+    "high_review_threshold": 0.82,
+    "uncertain_review_threshold": 0.63,
+    "maximum_candidates_per_node": 12
+  },
+  "validation": {
+    "minimum_document_node_recall": 0.45,
+    "minimum_sentences_per_document": 5,
+    "require_edge_per_document": true
+  }
+}

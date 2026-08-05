@@ -1,0 +1,399 @@
+{
+  "schema_version": "1.0",
+  "version": 6,
+  "policy": "Persistent across papers. Only exact aliases or human-approved aliases auto-resolve.",
+  "entries": [
+    {
+      "canonical_id": "tool_epanet",
+      "label": "Tool",
+      "canonical_name": "EPANET",
+      "aliases": [
+        "EPANET"
+      ],
+      "status": "seeded",
+      "definition": "Water distribution system modeling software."
+    },
+    {
+      "canonical_id": "ai_waterrag",
+      "label": "AISystem",
+      "canonical_name": "WaterRAG",
+      "aliases": [
+        "WaterRAG"
+      ],
+      "status": "seeded",
+      "definition": "A named retrieval-augmented generation system for the water sector."
+    },
+    {
+      "canonical_id": "ai_water_mas",
+      "label": "AISystem",
+      "canonical_name": "Water-MAS",
+      "aliases": [
+        "Water-MAS",
+        "Water MAS"
+      ],
+      "status": "seeded",
+      "definition": "A named multi-agent system for water applications."
+    },
+    {
+      "canonical_id": "ai_epanet_agentic",
+      "label": "AISystem",
+      "canonical_name": "EPANET-Agentic",
+      "aliases": [
+        "EPANET-Agentic"
+      ],
+      "status": "seeded",
+      "definition": "A named agentic AI system built around EPANET."
+    },
+    {
+      "canonical_id": "model_gpt4",
+      "label": "Model",
+      "canonical_name": "GPT-4",
+      "aliases": [
+        "GPT-4",
+        "GPT 4"
+      ],
+      "status": "seeded",
+      "definition": "The named GPT-4 language model."
+    },
+    {
+      "canonical_id": "model_gpt41",
+      "label": "Model",
+      "canonical_name": "GPT-4.1",
+      "aliases": [
+        "GPT-4.1",
+        "GPT 4.1"
+      ],
+      "status": "seeded",
+      "definition": "The named GPT-4.1 language model."
+    },
+    {
+      "canonical_id": "model_llama31",
+      "label": "Model",
+      "canonical_name": "Llama 3.1",
+      "aliases": [
+        "Llama 3.1",
+        "Llama-3.1"
+      ],
+      "status": "seeded",
+      "definition": "The named Llama 3.1 language model."
+    },
+    {
+      "canonical_id": "process_activated_sludge",
+      "label": "TreatmentProcess",
+      "canonical_name": "activated sludge process",
+      "aliases": [
+        "activated sludge process",
+        "activated sludge"
+      ],
+      "status": "seeded",
+      "definition": "A suspended-growth biological wastewater treatment process."
+    },
+    {
+      "canonical_id": "process_reverse_osmosis",
+      "label": "TreatmentProcess",
+      "canonical_name": "reverse osmosis",
+      "aliases": [
+        "reverse osmosis",
+        "RO"
+      ],
+      "status": "seeded",
+      "definition": "A pressure-driven membrane separation process."
+    },
+    {
+      "canonical_id": "process_mbr",
+      "label": "TreatmentProcess",
+      "canonical_name": "membrane bioreactor",
+      "aliases": [
+        "membrane bioreactor",
+        "MBR"
+      ],
+      "status": "seeded",
+      "definition": "A biological treatment process coupled with membrane separation."
+    },
+    {
+      "canonical_id": "process_gac",
+      "label": "TreatmentProcess",
+      "canonical_name": "granular activated carbon adsorption",
+      "aliases": [
+        "granular activated carbon adsorption",
+        "GAC adsorption"
+      ],
+      "status": "seeded",
+      "definition": "Adsorption treatment using granular activated carbon."
+    },
+    {
+      "canonical_id": "process_ozonation",
+      "label": "TreatmentProcess",
+      "canonical_name": "ozonation",
+      "aliases": [
+        "ozonation"
+      ],
+      "status": "seeded",
+      "definition": "Water treatment using ozone."
+    },
+    {
+      "canonical_id": "process_chlorination",
+      "label": "TreatmentProcess",
+      "canonical_name": "chlorination",
+      "aliases": [
+        "chlorination"
+      ],
+      "status": "seeded",
+      "definition": "Water disinfection or oxidation using chlorine."
+    },
+    {
+      "canonical_id": "matrix_drinking_water",
+      "label": "WaterMatrix",
+      "canonical_name": "drinking water",
+      "aliases": [
+        "drinking water",
+        "potable water"
+      ],
+      "status": "seeded",
+      "definition": "Water intended or treated for human consumption."
+    },
+    {
+      "canonical_id": "matrix_raw_water",
+      "label": "WaterMatrix",
+      "canonical_name": "raw water",
+      "aliases": [
+        "raw water"
+      ],
+      "status": "seeded",
+      "definition": "Untreated source water."
+    },
+    {
+      "canonical_id": "matrix_influent",
+      "label": "WaterMatrix",
+      "canonical_name": "wastewater influent",
+      "aliases": [
+        "wastewater influent",
+        "influent wastewater"
+      ],
+      "status": "seeded",
+      "definition": "Wastewater entering a treatment system."
+    },
+    {
+      "canonical_id": "matrix_effluent",
+      "label": "WaterMatrix",
+      "canonical_name": "treated effluent",
+      "aliases": [
+        "treated effluent",
+        "secondary effluent",
+        "tertiary effluent"
+      ],
+      "status": "seeded",
+      "definition": "Treated water discharged from a treatment system."
+    },
+    {
+      "canonical_id": "matrix_reclaimed",
+      "label": "WaterMatrix",
+      "canonical_name": "reclaimed water",
+      "aliases": [
+        "reclaimed water",
+        "recycled water"
+      ],
+      "status": "seeded",
+      "definition": "Treated wastewater made suitable for reuse."
+    },
+    {
+      "canonical_id": "contaminant_pfas",
+      "label": "Contaminant",
+      "canonical_name": "per- and polyfluoroalkyl substances",
+      "aliases": [
+        "per- and polyfluoroalkyl substances",
+        "PFAS"
+      ],
+      "status": "seeded",
+      "definition": "A class of persistent fluorinated contaminants."
+    },
+    {
+      "canonical_id": "contaminant_pfos",
+      "label": "Contaminant",
+      "canonical_name": "perfluorooctanesulfonic acid",
+      "aliases": [
+        "perfluorooctanesulfonic acid",
+        "PFOS"
+      ],
+      "status": "seeded",
+      "definition": "A perfluoroalkyl contaminant."
+    },
+    {
+      "canonical_id": "contaminant_pfoa",
+      "label": "Contaminant",
+      "canonical_name": "perfluorooctanoic acid",
+      "aliases": [
+        "perfluorooctanoic acid",
+        "PFOA"
+      ],
+      "status": "seeded",
+      "definition": "A perfluoroalkyl contaminant."
+    },
+    {
+      "canonical_id": "contaminant_nitrate",
+      "label": "Contaminant",
+      "canonical_name": "nitrate",
+      "aliases": [
+        "nitrate",
+        "NO3−",
+        "NO3-"
+      ],
+      "status": "seeded",
+      "definition": "A dissolved nitrogen species and regulated water contaminant."
+    },
+    {
+      "canonical_id": "contaminant_ammonia",
+      "label": "Contaminant",
+      "canonical_name": "ammonia",
+      "aliases": [
+        "ammonia",
+        "NH3"
+      ],
+      "status": "seeded",
+      "definition": "A reduced nitrogen species relevant to water quality."
+    },
+    {
+      "canonical_id": "metric_removal_efficiency",
+      "label": "Metric",
+      "canonical_name": "removal efficiency",
+      "aliases": [
+        "removal efficiency"
+      ],
+      "status": "seeded",
+      "definition": "The fraction or percentage of a constituent removed."
+    },
+    {
+      "canonical_id": "metric_energy_use",
+      "label": "Metric",
+      "canonical_name": "energy consumption",
+      "aliases": [
+        "energy consumption",
+        "Energy consumption",
+        "energy use",
+        "specific energy consumption"
+      ],
+      "status": "human_reviewed",
+      "definition": "Energy consumed by a process or system.",
+      "provenance": [
+        {
+          "decision_id": "decision_0e9993f0d0e866bccbd4",
+          "run_id": "run_20260731T214841_498d26",
+          "reviewed_at": "2026-07-31T21:52:50.373386+00:00"
+        },
+        {
+          "decision_id": "decision_8541afbe38b4419326a8",
+          "run_id": "run_20260731T214841_498d26",
+          "reviewed_at": "2026-07-31T21:52:56.394846+00:00"
+        }
+      ]
+    },
+    {
+      "canonical_id": "metric_rmse",
+      "label": "Metric",
+      "canonical_name": "root mean square error",
+      "aliases": [
+        "root mean square error",
+        "RMSE"
+      ],
+      "status": "seeded",
+      "definition": "A model error metric."
+    },
+    {
+      "canonical_id": "metric_mae",
+      "label": "Metric",
+      "canonical_name": "mean absolute error",
+      "aliases": [
+        "mean absolute error",
+        "MAE"
+      ],
+      "status": "seeded",
+      "definition": "A model error metric."
+    },
+    {
+      "canonical_id": "parameter_ph",
+      "label": "Parameter",
+      "canonical_name": "pH",
+      "aliases": [
+        "pH"
+      ],
+      "status": "seeded",
+      "definition": "A measure of acidity or alkalinity."
+    },
+    {
+      "canonical_id": "parameter_hrt",
+      "label": "Parameter",
+      "canonical_name": "hydraulic retention time",
+      "aliases": [
+        "hydraulic retention time",
+        "HRT"
+      ],
+      "status": "seeded",
+      "definition": "The average time liquid remains in a process unit."
+    },
+    {
+      "canonical_id": "parameter_srt",
+      "label": "Parameter",
+      "canonical_name": "solids retention time",
+      "aliases": [
+        "solids retention time",
+        "SRT"
+      ],
+      "status": "seeded",
+      "definition": "The average residence time of solids in a treatment process."
+    },
+    {
+      "canonical_id": "parameter_flux",
+      "label": "Parameter",
+      "canonical_name": "membrane flux",
+      "aliases": [
+        "membrane flux",
+        "flux"
+      ],
+      "status": "seeded",
+      "definition": "Flow through a membrane per unit area."
+    },
+    {
+      "canonical_id": "lex_aebde272c6860c03f08a",
+      "label": "Model",
+      "canonical_name": "Random Forest",
+      "aliases": [
+        "Random Forest",
+        "Forest",
+        "Random"
+      ],
+      "status": "human_reviewed",
+      "definition": "Human-reviewed canonical Model for Engineered Water Systems extraction.",
+      "provenance": [
+        {
+          "decision_id": "decision_474ab544828f6e98e577",
+          "run_id": "run_20260731T210825_34dd60",
+          "reviewed_at": "2026-07-31T21:45:18.966554+00:00"
+        },
+        {
+          "decision_id": "decision_0cfe2bbb6c5e68933b4a",
+          "run_id": "run_20260731T210825_34dd60",
+          "reviewed_at": "2026-07-31T21:45:24.332204+00:00"
+        }
+      ]
+    },
+    {
+      "canonical_id": "lex_321d57e8f965949fe48f",
+      "label": "TreatmentProcess",
+      "canonical_name": "conventional drinking water treatment",
+      "aliases": [
+        "conventional drinking water treatment",
+        "CDWT"
+      ],
+      "status": "human_reviewed",
+      "definition": "Human-reviewed canonical TreatmentProcess for Engineered Water Systems extraction.",
+      "provenance": [
+        {
+          "decision_id": "decision_a6c5161ac86958bf852d",
+          "run_id": "run_20260731T214841_498d26",
+          "reviewed_at": "2026-07-31T21:52:42.754641+00:00"
+        }
+      ]
+    }
+  ],
+  "updated_at": "2026-07-31T21:52:56.404847+00:00"
+}

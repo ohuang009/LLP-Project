@@ -1,0 +1,113 @@
+{
+  "schema_version": "1.0",
+  "profile_id": "engineered_water_systems",
+  "scope": "Human-managed water treatment, reuse, distribution, collection, desalination, monitoring, and operations.",
+  "ontology_path": "ontology/ontology.json",
+  "construction_vocabulary": {
+    "system_heads": [
+      "system",
+      "framework",
+      "platform",
+      "assistant",
+      "agent",
+      "pipeline"
+    ],
+    "agent_heads": [
+      "agent",
+      "sub-agent",
+      "expert agent",
+      "expert-level agent"
+    ],
+    "model_cues": [
+      "model",
+      "models",
+      "language model",
+      "language models",
+      "LLM",
+      "LLMs",
+      "backbone",
+      "regressor",
+      "neural network",
+      "algorithm"
+    ],
+    "task_patterns": [
+      "(?:scientific\\s+literature|structured\\s+data|result|water\\s+quality|process)?\\s*analysis",
+      "(?:real-time|closed-loop|operational|process|simulation)?\\s*control",
+      "(?:quantitative|process|water\\s+quality)?\\s*prediction",
+      "(?:process|design|operational)?\\s*optimization",
+      "(?:real-time|water\\s+quality)?\\s*monitoring",
+      "decision\\s+support",
+      "hydraulic\\s+state\\s+estimation",
+      "real-time\\s+optimal\\s+control"
+    ],
+    "dataset_patterns": [
+      "(?:corpus\\s+of\\s+)?\\d+\\s+(?:peer-reviewed\\s+|published\\s+|scientific\\s+)?(?:studies|papers)",
+      "\\d+\\s+(?:structured\\s+|numerical\\s+)?data\\s+points",
+      "(?:standardized\\s+)?[A-Za-z0-9-]+(?:\\s+[A-Za-z0-9-]+){0,3}\\s+(?:question\\s+)?dataset",
+      "(?:test\\s+split\\s+(?:comprising|containing)\\s+)?(?:\\d{1,3}(?:,\\s*\\d{3})+|\\d+)\\s+(?:Monte\\s+Carlo\\s+)?(?:training\\s+|test\\s+)?(?:sample\\s+data|samples?)",
+      "(?:eleven|\\d+)\\s+(?:distinct\\s+)?WDSs?"
+    ],
+    "model_patterns": [
+      "gradient\\s+boosting\\s+(?:regression|regressor)",
+      "modified\\s+Donnan\\s+model"
+    ],
+    "tool_patterns": [
+      "Raspberry\\s+Pi(?:\\s+\\d+)?",
+      "Ollama",
+      "Unsloth",
+      "AutoGen"
+    ],
+    "method_patterns": [
+      "multi-agent\\s+deep\\s+reinforcement\\s+learning",
+      "life\\s+cycle\\s+assessment",
+      "improved\\s+(?:graph\\s+neural\\s+network|GNN)\\s+architecture",
+      "adapted\\s+physics-informed\\s+algorithm",
+      "iterative\\s+two-phase\\s+training\\s+scheme",
+      "physics-preserving\\s+(?:data\\s+)?normalization"
+    ],
+    "parameter_patterns": ["dissolved\\s+oxygen", "chemical\\s+dos(?:e|age)"],
+    "condition_patterns": [
+      "out-of-distribution\\s+demand\\s+increase",
+      "out-of-distribution\\s+pipe-diameter\\s+variation"
+    ],
+    "challenge_patterns": [
+      "exploding\\s+gradients?", "static-in-time\\s+hydraulic\\s+state\\s+estimation"
+    ],
+    "process_patterns": [
+      "membrane\\s+capacitive\\s+deionization",
+      "electrochemical\\s+water\\s+treatment",
+      "MCDI"
+    ],
+    "metric_patterns": [
+      "(?:coefficient\\s+of\\s+determination|R2)",
+      "specific\\s+energy\\s+consumption",
+      "thermodynamic\\s+energy\\s+efficiency",
+      "(?:hallucination\\s+(?:rate|score)|reference\\s+accuracy|factual\\s+consistency|conciseness(?:\\s+score)?)",
+      "normalized\\s+mean\\s+absolute\\s+error",
+      "simulation\\s+speedup",
+      "operational\\s+cost",
+      "eutrophication\\s+potential",
+      "effluent\\s+quality"
+    ],
+    "identity_stopwords": [
+      "a",
+      "an",
+      "the",
+      "proposed",
+      "new",
+      "intelligent",
+      "portable",
+      "visionenabled",
+      "vision-enabled",
+      "artificial",
+      "intelligence",
+      "ai",
+      "expert",
+      "agent",
+      "system",
+      "framework",
+      "platform",
+      "pipeline"
+    ]
+  }
+}

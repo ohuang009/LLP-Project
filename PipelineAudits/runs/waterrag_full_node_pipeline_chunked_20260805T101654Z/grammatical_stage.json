@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "required": true,
+  "status": "complete",
+  "parser_model": "en_core_web_sm",
+  "typing_model": "allenai/scibert_scivocab_uncased",
+  "sentences": 282,
+  "tokens": 8150,
+  "triples": 714,
+  "unique_arguments": 995,
+  "generated_candidates": 995,
+  "typed_candidates": 215,
+  "untyped_arguments": 780
+}

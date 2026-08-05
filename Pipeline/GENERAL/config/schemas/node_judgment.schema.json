@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "node_judgment.schema.json",
+  "title": "Node candidate judgment",
+  "type": "object",
+  "required": [
+    "candidate_id",
+    "decision",
+    "judge",
+    "llm_used",
+    "reason",
+    "source"
+  ],
+  "properties": {
+    "candidate_id": {"type": "string", "minLength": 1},
+    "decision": {"enum": ["accept", "review", "reject"]},
+    "ontology_label": {"type": "string"},
+    "canonical_name": {"type": "string"},
+    "definition": {"type": "string"},
+    "judge": {"type": "string", "minLength": 1},
+    "llm_used": {"type": "boolean"},
+    "model": {"type": "string"},
+    "rubric_version": {"type": "string"},
+    "rubric_hash": {"type": "string"},
+    "reason": {"type": "string", "minLength": 1},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "source": {"type": "object"}
+  }
+}

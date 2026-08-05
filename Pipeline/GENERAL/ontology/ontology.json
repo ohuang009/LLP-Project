@@ -1,0 +1,1611 @@
+{
+  "schema_version": "2.0",
+  "generated_at": "2026-08-04T18:19:43.131948+00:00",
+  "scope": "Engineered Water Systems with reusable scientific, environmental, technical, biological, material, policy, and resource concepts for cross-paper graphs.",
+  "authoritative_source": {
+    "workbook": "Pipeline/GENERAL/ontology/Engineered_Water_Systems_Ontology_v2.xlsx",
+    "nodes": "Nodes!A4:G52",
+    "relationships": "Edges!A4:G57",
+    "domain_range": "Domain-Range!A4:E57"
+  },
+  "proposed_extensions": {
+    "status": "None",
+    "nodes": [],
+    "relationships": []
+  },
+  "nodes": {
+    "Publication": {
+      "category": "Evidence",
+      "status": "Core",
+      "definition": "A citable paper, report, standard, or other document that supplies provenance.",
+      "properties": [
+        "id",
+        "doi",
+        "title",
+        "year",
+        "journal",
+        "filePath"
+      ],
+      "identity_strategy": "DOI when available",
+      "example": "10.1016/j.watres.2026.x"
+    },
+    "Person": {
+      "category": "Evidence",
+      "status": "Core",
+      "definition": "An author, contributor, expert, or responsible individual.",
+      "properties": [
+        "id",
+        "name",
+        "orcid"
+      ],
+      "identity_strategy": "ORCID or normalized person ID",
+      "example": "Jane Smith"
+    },
+    "Organization": {
+      "category": "Evidence",
+      "status": "Core",
+      "definition": "An institution, utility, regulator, company, or research group.",
+      "properties": [
+        "id",
+        "name",
+        "organizationType",
+        "country"
+      ],
+      "identity_strategy": "ROR ID when available",
+      "example": "Metropolitan Water Utility"
+    },
+    "EvidenceFragment": {
+      "category": "Evidence",
+      "status": "Core",
+      "definition": "An exact sentence, paragraph, table cell, caption, or other source fragment grounding an extraction.",
+      "properties": [
+        "id",
+        "text",
+        "fragmentType",
+        "page",
+        "section",
+        "startChar",
+        "endChar"
+      ],
+      "identity_strategy": "Publication ID + local fragment ID",
+      "example": "Table 3, row PFOS"
+    },
+    "Mention": {
+      "category": "Evidence",
+      "status": "Core",
+      "definition": "A specific phrase occurrence that may refer to a canonical ontology entity.",
+      "properties": [
+        "id",
+        "surfaceText",
+        "normalizedName",
+        "confidence",
+        "extractionMethod"
+      ],
+      "identity_strategy": "Fragment ID + character offsets",
+      "example": "membrane bioreactor"
+    },
+    "Dataset": {
+      "category": "Evidence",
+      "status": "Core",
+      "definition": "A benchmark, monitoring series, experimental dataset, or curated corpus.",
+      "properties": [
+        "id",
+        "name",
+        "version",
+        "size",
+        "accessUrl"
+      ],
+      "identity_strategy": "DOI, repository ID, or stable URL",
+      "example": "WaterBench"
+    },
+    "DataSource": {
+      "category": "Evidence",
+      "status": "Core",
+      "definition": "The original database, sensor, monitoring program, or document collection from which data were obtained.",
+      "properties": [
+        "id",
+        "name",
+        "sourceType",
+        "accessUrl"
+      ],
+      "identity_strategy": "Stable source ID",
+      "example": "EPA Water Quality Portal"
+    },
+    "Experiment": {
+      "category": "Evidence",
+      "status": "Core",
+      "definition": "A bounded laboratory, pilot, full-scale, computational, or evaluation activity.",
+      "properties": [
+        "id",
+        "name",
+        "experimentType",
+        "scale",
+        "design",
+        "sampleSize"
+      ],
+      "identity_strategy": "Publication ID + local experiment ID",
+      "example": "Pilot GAC column test"
+    },
+    "Observation": {
+      "category": "Evidence",
+      "status": "Core",
+      "definition": "A measured, calculated, predicted, or extracted result under stated conditions.",
+      "properties": [
+        "id",
+        "value",
+        "normalizedValue",
+        "unit",
+        "originalValue",
+        "qualifier",
+        "uncertainty",
+        "evidenceStatus"
+      ],
+      "identity_strategy": "Publication ID + local observation ID",
+      "example": "PFOS removal = 88%"
+    },
+    "Claim": {
+      "category": "Evidence",
+      "status": "Core",
+      "definition": "A source-supported proposition, conclusion, comparison, or recommendation.",
+      "properties": [
+        "id",
+        "text",
+        "claimType",
+        "confidence"
+      ],
+      "identity_strategy": "Publication ID + local claim ID",
+      "example": "GAC reduced PFOS breakthrough"
+    },
+    "AISystem": {
+      "category": "AI / Workflow",
+      "status": "Core",
+      "definition": "A named AI framework, agentic system, or decision-support platform.",
+      "properties": [
+        "id",
+        "name",
+        "architecture",
+        "version"
+      ],
+      "identity_strategy": "Product/framework ID",
+      "example": "WaterRAG"
+    },
+    "Model": {
+      "category": "AI / Workflow",
+      "status": "Core",
+      "definition": "A language, machine-learning, graph, statistical, hydraulic, or process model.",
+      "properties": [
+        "id",
+        "name",
+        "provider",
+        "version",
+        "modelType"
+      ],
+      "identity_strategy": "Provider + model + version",
+      "example": "EPANET hydraulic model"
+    },
+    "Agent": {
+      "category": "AI / Workflow",
+      "status": "Extension",
+      "definition": "A role-bearing autonomous or semi-autonomous component of an AI system.",
+      "properties": [
+        "id",
+        "name",
+        "role",
+        "autonomyLevel"
+      ],
+      "identity_strategy": "System ID + agent role",
+      "example": "Retrieval agent"
+    },
+    "Tool": {
+      "category": "AI / Workflow",
+      "status": "Core",
+      "definition": "An external solver, simulator, database interface, API, or execution tool.",
+      "properties": [
+        "id",
+        "name",
+        "toolType",
+        "version"
+      ],
+      "identity_strategy": "Tool name + version",
+      "example": "EPANET 2.2"
+    },
+    "Method": {
+      "category": "AI / Workflow",
+      "status": "Core",
+      "definition": "An analytical, experimental, optimization, retrieval, or modeling method.",
+      "properties": [
+        "id",
+        "name",
+        "methodType",
+        "protocolReference"
+      ],
+      "identity_strategy": "Controlled method ID",
+      "example": "solid-phase extraction"
+    },
+    "Task": {
+      "category": "AI / Workflow",
+      "status": "Core",
+      "definition": "A research, analytical, operational, or decision objective.",
+      "properties": [
+        "id",
+        "name",
+        "taskType"
+      ],
+      "identity_strategy": "Controlled task ID",
+      "example": "pump scheduling"
+    },
+    "SoftwareArtifact": {
+      "category": "AI / Workflow",
+      "status": "Extension",
+      "definition": "A versioned codebase, package, repository, script, executable, or model checkpoint.",
+      "properties": [
+        "id",
+        "name",
+        "version",
+        "artifactType",
+        "repositoryUrl"
+      ],
+      "identity_strategy": "Repository URL + version",
+      "example": "WaterRAG GitHub release"
+    },
+    "WaterSystem": {
+      "category": "Water Domain",
+      "status": "Core",
+      "definition": "A human-managed system for abstraction, treatment, distribution, collection, reuse, or discharge of water.",
+      "properties": [
+        "id",
+        "name",
+        "systemType",
+        "scale"
+      ],
+      "identity_strategy": "Normalized system ID",
+      "example": "municipal wastewater system"
+    },
+    "WaterSource": {
+      "category": "Water Domain",
+      "status": "Core",
+      "definition": "The origin from which water is abstracted or received by an engineered system.",
+      "properties": [
+        "id",
+        "name",
+        "sourceType",
+        "externalId"
+      ],
+      "identity_strategy": "Normalized source ID",
+      "example": "groundwater well field"
+    },
+    "WaterMatrix": {
+      "category": "Water Domain",
+      "status": "Core",
+      "definition": "The water or aqueous medium in which a measurement, treatment, or exposure occurs.",
+      "properties": [
+        "id",
+        "name",
+        "matrixType",
+        "salinityClass"
+      ],
+      "identity_strategy": "Controlled matrix vocabulary",
+      "example": "secondary effluent"
+    },
+    "TreatmentPlant": {
+      "category": "Water Domain",
+      "status": "Core",
+      "definition": "A facility that performs one or more water or wastewater treatment processes.",
+      "properties": [
+        "id",
+        "name",
+        "plantType",
+        "designCapacity",
+        "capacityUnit"
+      ],
+      "identity_strategy": "Facility ID + location",
+      "example": "North River WWTP"
+    },
+    "TreatmentTrain": {
+      "category": "Water Domain",
+      "status": "Core",
+      "definition": "An ordered sequence of treatment units or processes.",
+      "properties": [
+        "id",
+        "name",
+        "trainType"
+      ],
+      "identity_strategy": "Plant ID + train ID",
+      "example": "coagulation-filtration-disinfection"
+    },
+    "TreatmentUnit": {
+      "category": "Water Domain",
+      "status": "Core",
+      "definition": "A physical unit operation or reactor within a treatment train.",
+      "properties": [
+        "id",
+        "name",
+        "unitType",
+        "capacity",
+        "capacityUnit"
+      ],
+      "identity_strategy": "Plant/train ID + unit ID",
+      "example": "GAC contactor 2"
+    },
+    "TreatmentProcess": {
+      "category": "Water Domain",
+      "status": "Core",
+      "definition": "A physical, chemical, or biological process used to alter water quality.",
+      "properties": [
+        "id",
+        "name",
+        "processType",
+        "mechanism"
+      ],
+      "identity_strategy": "Controlled process ID",
+      "example": "granular activated carbon adsorption"
+    },
+    "Contaminant": {
+      "category": "Water Domain",
+      "status": "Core",
+      "definition": "A chemical, biological, particulate, or radiological constituent of concern.",
+      "properties": [
+        "id",
+        "name",
+        "contaminantClass",
+        "casNumber",
+        "inchikey",
+        "pubchemCid"
+      ],
+      "identity_strategy": "Chemical or taxonomy identifier",
+      "example": "PFOS"
+    },
+    "Microorganism": {
+      "category": "Water Domain",
+      "status": "Extension",
+      "definition": "A microbial taxon, functional group, pathogen, or treatment-community member.",
+      "properties": [
+        "id",
+        "name",
+        "scientificName",
+        "taxonomyId",
+        "role"
+      ],
+      "identity_strategy": "NCBI Taxonomy ID",
+      "example": "Candidatus Accumulibacter"
+    },
+    "Sample": {
+      "category": "Water Domain",
+      "status": "Core",
+      "definition": "A discrete or composite quantity of water, sludge, residual, or biomass collected for analysis.",
+      "properties": [
+        "id",
+        "sampleType",
+        "collectionTime",
+        "preservation",
+        "replicate"
+      ],
+      "identity_strategy": "Study ID + sample ID",
+      "example": "24-hour composite effluent sample"
+    },
+    "SamplingEvent": {
+      "category": "Water Domain",
+      "status": "Core",
+      "definition": "A time- and location-bounded event during which one or more samples were collected.",
+      "properties": [
+        "id",
+        "timestamp",
+        "eventType",
+        "campaign"
+      ],
+      "identity_strategy": "Study/site ID + timestamp",
+      "example": "dry-weather campaign day 3"
+    },
+    "Residual": {
+      "category": "Water Domain",
+      "status": "Extension",
+      "definition": "A sludge, concentrate, brine, spent media, or other residual generated by treatment.",
+      "properties": [
+        "id",
+        "name",
+        "residualType",
+        "disposalRoute"
+      ],
+      "identity_strategy": "Plant/process ID + residual ID",
+      "example": "reverse-osmosis concentrate"
+    },
+    "Intervention": {
+      "category": "Water Domain",
+      "status": "Core",
+      "definition": "A deliberate operational, infrastructure, chemical, or control change evaluated in a water system.",
+      "properties": [
+        "id",
+        "name",
+        "interventionType",
+        "startDate",
+        "endDate"
+      ],
+      "identity_strategy": "Study ID + intervention ID",
+      "example": "aeration setpoint reduction"
+    },
+    "Parameter": {
+      "category": "Context",
+      "status": "Core",
+      "definition": "A named configurable or observed value defining a system, process, experiment, or model setting.",
+      "properties": [
+        "id",
+        "name",
+        "value",
+        "unit",
+        "parameterType"
+      ],
+      "identity_strategy": "Controlled parameter + context",
+      "example": "hydraulic retention time = 8 h"
+    },
+    "Metric": {
+      "category": "Context",
+      "status": "Core",
+      "definition": "A scientific, operational, economic, or AI evaluation measure.",
+      "properties": [
+        "id",
+        "name",
+        "unit",
+        "metricType",
+        "dimension"
+      ],
+      "identity_strategy": "Controlled metric ID",
+      "example": "removal efficiency"
+    },
+    "Condition": {
+      "category": "Context",
+      "status": "Core",
+      "definition": "An experimental, environmental, spatial, temporal, or operating context.",
+      "properties": [
+        "id",
+        "name",
+        "conditionType",
+        "value",
+        "unit"
+      ],
+      "identity_strategy": "Controlled condition + context",
+      "example": "pH 7.2"
+    },
+    "Location": {
+      "category": "Context",
+      "status": "Core",
+      "definition": "A geographic, administrative, site-level, or sampling location.",
+      "properties": [
+        "id",
+        "name",
+        "locationType",
+        "latitude",
+        "longitude"
+      ],
+      "identity_strategy": "GeoNames/site ID",
+      "example": "final effluent sampling port"
+    },
+    "Challenge": {
+      "category": "Context",
+      "status": "Core",
+      "definition": "A limitation, risk, uncertainty, requirement, or knowledge gap.",
+      "properties": [
+        "id",
+        "name",
+        "challengeType",
+        "severity"
+      ],
+      "identity_strategy": "Controlled challenge ID",
+      "example": "membrane fouling"
+    },
+    "Impact": {
+      "category": "Context",
+      "status": "Extension",
+      "definition": "An environmental, health, economic, or social outcome associated with a water-system decision.",
+      "properties": [
+        "id",
+        "name",
+        "impactType",
+        "timeHorizon"
+      ],
+      "identity_strategy": "Controlled impact ID",
+      "example": "greenhouse-gas emissions"
+    },
+    "Standard": {
+      "category": "Context",
+      "status": "Extension",
+      "definition": "A regulation, guideline, permit limit, or technical standard governing water systems or measurements.",
+      "properties": [
+        "id",
+        "title",
+        "jurisdiction",
+        "standardType",
+        "effectiveDate",
+        "sourceUrl"
+      ],
+      "identity_strategy": "Official document ID",
+      "example": "EPA PFAS drinking-water MCL"
+    },
+    "ScientificConcept": {
+      "category": "Cross-Domain",
+      "status": "Core",
+      "definition": "A clear scientific, environmental, technical, or societal concept used to connect findings across publications.",
+      "properties": [
+        "id",
+        "name",
+        "conceptType",
+        "definition"
+      ],
+      "identity_strategy": "Controlled concept ID or normalized concept name",
+      "example": "water quality"
+    },
+    "EnvironmentalProcess": {
+      "category": "Cross-Domain",
+      "status": "Core",
+      "definition": "A natural or anthropogenic environmental process that changes matter, energy, organisms, or environmental conditions.",
+      "properties": [
+        "id",
+        "name",
+        "processType",
+        "scale"
+      ],
+      "identity_strategy": "Controlled process ID or normalized process name",
+      "example": "eutrophication"
+    },
+    "EnvironmentalCompartment": {
+      "category": "Cross-Domain",
+      "status": "Extension",
+      "definition": "A physical environmental medium or compartment in which substances, organisms, or processes occur.",
+      "properties": [
+        "id",
+        "name",
+        "compartmentType"
+      ],
+      "identity_strategy": "Controlled compartment vocabulary",
+      "example": "sediment"
+    },
+    "Material": {
+      "category": "Cross-Domain",
+      "status": "Core",
+      "definition": "A natural or engineered material, medium, adsorbent, membrane, catalyst, or construction substance.",
+      "properties": [
+        "id",
+        "name",
+        "materialType",
+        "composition"
+      ],
+      "identity_strategy": "Material identifier or normalized material name",
+      "example": "activated carbon"
+    },
+    "ChemicalSubstance": {
+      "category": "Cross-Domain",
+      "status": "Core",
+      "definition": "A chemical element, compound, mixture, reagent, or additive whether or not it is considered a contaminant.",
+      "properties": [
+        "id",
+        "name",
+        "formula",
+        "casRn",
+        "role"
+      ],
+      "identity_strategy": "CAS RN, InChIKey, or normalized chemical name",
+      "example": "sodium hypochlorite"
+    },
+    "BiologicalEntity": {
+      "category": "Cross-Domain",
+      "status": "Extension",
+      "definition": "An organism, biological community, gene, protein, tissue, or other biological entity not limited to microorganisms.",
+      "properties": [
+        "id",
+        "name",
+        "entityType",
+        "taxonomyId"
+      ],
+      "identity_strategy": "Recognized taxonomy or biological database identifier",
+      "example": "algae"
+    },
+    "Mechanism": {
+      "category": "Cross-Domain",
+      "status": "Extension",
+      "definition": "A causal, physical, chemical, biological, or computational mechanism explaining how a process or outcome occurs.",
+      "properties": [
+        "id",
+        "name",
+        "mechanismType"
+      ],
+      "identity_strategy": "Controlled mechanism ID or normalized name",
+      "example": "adsorption mechanism"
+    },
+    "Technology": {
+      "category": "Cross-Domain",
+      "status": "Core",
+      "definition": "A general or named technology, technical platform, or technological approach that is broader than a specific tool or treatment unit.",
+      "properties": [
+        "id",
+        "name",
+        "technologyType"
+      ],
+      "identity_strategy": "Controlled technology ID or normalized name",
+      "example": "membrane technology"
+    },
+    "Policy": {
+      "category": "Context",
+      "status": "Extension",
+      "definition": "A policy, strategy, program, or governance instrument that guides decisions but is not necessarily a binding standard.",
+      "properties": [
+        "id",
+        "title",
+        "jurisdiction",
+        "effectiveDate"
+      ],
+      "identity_strategy": "Official policy identifier or normalized title",
+      "example": "circular economy policy"
+    },
+    "Resource": {
+      "category": "Context",
+      "status": "Extension",
+      "definition": "A material, energy, financial, informational, land, or water resource consumed, conserved, recovered, or managed.",
+      "properties": [
+        "id",
+        "name",
+        "resourceType",
+        "unit"
+      ],
+      "identity_strategy": "Controlled resource ID or normalized name",
+      "example": "electricity"
+    },
+    "Property": {
+      "category": "Context",
+      "status": "Extension",
+      "definition": "A named physical, chemical, biological, environmental, or technical property of an entity or system.",
+      "properties": [
+        "id",
+        "name",
+        "propertyType",
+        "unit"
+      ],
+      "identity_strategy": "Controlled property ID or normalized name",
+      "example": "hydrophobicity"
+    }
+  },
+  "relationships": {
+    "AUTHORED_BY": {
+      "category": "Evidence",
+      "definition": "Connects a publication to an author.",
+      "properties": [
+        "position",
+        "corresponding"
+      ],
+      "domain": [
+        "Publication"
+      ],
+      "range": [
+        "Person"
+      ],
+      "readable_direction": "Publication → Person"
+    },
+    "AFFILIATED_WITH": {
+      "category": "Evidence",
+      "definition": "Connects a person to an organization.",
+      "properties": [
+        "startDate",
+        "endDate"
+      ],
+      "domain": [
+        "Person"
+      ],
+      "range": [
+        "Organization"
+      ],
+      "readable_direction": "Person → Organization"
+    },
+    "CITES": {
+      "category": "Evidence",
+      "definition": "Records a citation between publications.",
+      "properties": [
+        "section",
+        "context"
+      ],
+      "domain": [
+        "Publication"
+      ],
+      "range": [
+        "Publication"
+      ],
+      "readable_direction": "Publication → Publication"
+    },
+    "CONTAINS_FRAGMENT": {
+      "category": "Evidence",
+      "definition": "Links a document to an exact evidence fragment.",
+      "properties": [
+        "order"
+      ],
+      "domain": [
+        "Publication"
+      ],
+      "range": [
+        "EvidenceFragment"
+      ],
+      "readable_direction": "Publication → EvidenceFragment"
+    },
+    "CONTAINS_MENTION": {
+      "category": "Evidence",
+      "definition": "Links a fragment to a phrase occurrence.",
+      "properties": [
+        "startChar",
+        "endChar"
+      ],
+      "domain": [
+        "EvidenceFragment"
+      ],
+      "range": [
+        "Mention"
+      ],
+      "readable_direction": "EvidenceFragment → Mention"
+    },
+    "REFERS_TO": {
+      "category": "Evidence",
+      "definition": "Maps a mention to a canonical entity without erasing the mention.",
+      "properties": [
+        "confidence",
+        "resolutionMethod",
+        "reviewStatus"
+      ],
+      "domain": [
+        "Mention"
+      ],
+      "range": [
+        "Publication",
+        "Person",
+        "Organization",
+        "EvidenceFragment",
+        "Mention",
+        "Dataset",
+        "DataSource",
+        "Experiment",
+        "Observation",
+        "Claim",
+        "AISystem",
+        "Model",
+        "Agent",
+        "Tool",
+        "Method",
+        "Task",
+        "SoftwareArtifact",
+        "WaterSystem",
+        "WaterSource",
+        "WaterMatrix",
+        "TreatmentPlant",
+        "TreatmentTrain",
+        "TreatmentUnit",
+        "TreatmentProcess",
+        "Contaminant",
+        "Microorganism",
+        "Sample",
+        "SamplingEvent",
+        "Residual",
+        "Intervention",
+        "Parameter",
+        "Metric",
+        "Condition",
+        "Location",
+        "Challenge",
+        "Impact",
+        "Standard",
+        "ScientificConcept",
+        "EnvironmentalProcess",
+        "EnvironmentalCompartment",
+        "Material",
+        "ChemicalSubstance",
+        "BiologicalEntity",
+        "Mechanism",
+        "Technology",
+        "Policy",
+        "Resource",
+        "Property"
+      ],
+      "readable_direction": "Mention → Canonical node"
+    },
+    "GROUNDED_IN": {
+      "category": "Evidence",
+      "definition": "Grounds a result or claim in exact source evidence.",
+      "properties": [
+        "supportStrength"
+      ],
+      "domain": [
+        "Observation",
+        "Claim"
+      ],
+      "range": [
+        "EvidenceFragment"
+      ],
+      "readable_direction": "Result → EvidenceFragment"
+    },
+    "REPORTS": {
+      "category": "Evidence",
+      "definition": "Links a publication to a result it reports.",
+      "properties": [
+        "page",
+        "section"
+      ],
+      "domain": [
+        "Publication"
+      ],
+      "range": [
+        "Observation",
+        "Claim"
+      ],
+      "readable_direction": "Publication → Result"
+    },
+    "HAS_EXPERIMENT": {
+      "category": "Evidence",
+      "definition": "Links a publication to a bounded study activity.",
+      "properties": [
+        "order"
+      ],
+      "domain": [
+        "Publication"
+      ],
+      "range": [
+        "Experiment"
+      ],
+      "readable_direction": "Publication → Experiment"
+    },
+    "PRODUCES": {
+      "category": "Evidence",
+      "definition": "Identifies outputs of an experiment or computational evaluation.",
+      "properties": [
+        "runId"
+      ],
+      "domain": [
+        "Experiment"
+      ],
+      "range": [
+        "Observation",
+        "Dataset"
+      ],
+      "readable_direction": "Experiment → Output"
+    },
+    "SUPPORTED_BY": {
+      "category": "Evidence",
+      "definition": "Links a claim to supporting evidence.",
+      "properties": [
+        "supportStrength"
+      ],
+      "domain": [
+        "Claim"
+      ],
+      "range": [
+        "Observation",
+        "Dataset",
+        "Publication"
+      ],
+      "readable_direction": "Claim → Evidence"
+    },
+    "CONTRADICTS": {
+      "category": "Evidence",
+      "definition": "Links claims that conflict within a defined scope.",
+      "properties": [
+        "scope",
+        "reason"
+      ],
+      "domain": [
+        "Claim"
+      ],
+      "range": [
+        "Claim"
+      ],
+      "readable_direction": "Claim → Claim"
+    },
+    "DERIVED_FROM": {
+      "category": "Evidence",
+      "definition": "Records provenance of data or results.",
+      "properties": [
+        "method",
+        "extractionDate"
+      ],
+      "domain": [
+        "Dataset",
+        "Observation",
+        "Claim"
+      ],
+      "range": [
+        "DataSource",
+        "Dataset",
+        "Publication"
+      ],
+      "readable_direction": "Derived item → Source"
+    },
+    "ABOUT": {
+      "category": "Evidence",
+      "definition": "Identifies the principal subject of a result or claim.",
+      "properties": [
+        "confidence"
+      ],
+      "domain": [
+        "Observation",
+        "Claim"
+      ],
+      "range": [
+        "Contaminant",
+        "WaterSystem",
+        "TreatmentProcess",
+        "TreatmentUnit",
+        "Intervention",
+        "AISystem",
+        "ScientificConcept",
+        "EnvironmentalProcess",
+        "EnvironmentalCompartment",
+        "Material",
+        "ChemicalSubstance",
+        "BiologicalEntity",
+        "Mechanism",
+        "Technology",
+        "Policy",
+        "Resource",
+        "Property"
+      ],
+      "readable_direction": "Result → Subject"
+    },
+    "MEASURES": {
+      "category": "Evidence",
+      "definition": "Identifies the metric represented by an observation.",
+      "properties": [
+        "method"
+      ],
+      "domain": [
+        "Observation"
+      ],
+      "range": [
+        "Metric"
+      ],
+      "readable_direction": "Observation → Metric"
+    },
+    "OBSERVED_IN": {
+      "category": "Evidence",
+      "definition": "Identifies the sample or matrix in which an observation applies.",
+      "properties": [
+        "role"
+      ],
+      "domain": [
+        "Observation"
+      ],
+      "range": [
+        "Sample",
+        "WaterMatrix"
+      ],
+      "readable_direction": "Observation → Sample/Matrix"
+    },
+    "GENERATED_BY": {
+      "category": "Evidence",
+      "definition": "Identifies how an observation was generated.",
+      "properties": [
+        "runId",
+        "timestamp"
+      ],
+      "domain": [
+        "Observation"
+      ],
+      "range": [
+        "Experiment",
+        "Method",
+        "Model",
+        "AISystem"
+      ],
+      "readable_direction": "Observation → Generator"
+    },
+    "SUBJECT_TO": {
+      "category": "Context",
+      "definition": "Attaches governing conditions or settings.",
+      "properties": [
+        "role"
+      ],
+      "domain": [
+        "Observation",
+        "Experiment"
+      ],
+      "range": [
+        "Condition",
+        "Parameter"
+      ],
+      "readable_direction": "Observation/Experiment → Context"
+    },
+    "SAMPLED_AT": {
+      "category": "Water Domain",
+      "definition": "Identifies the physical sampling point.",
+      "properties": [
+        "port",
+        "depth"
+      ],
+      "domain": [
+        "SamplingEvent",
+        "Sample"
+      ],
+      "range": [
+        "Location",
+        "TreatmentUnit"
+      ],
+      "readable_direction": "Sampling entity → Location/Unit"
+    },
+    "COLLECTED_DURING": {
+      "category": "Water Domain",
+      "definition": "Links a sample to its collection event.",
+      "properties": [
+        "sequence"
+      ],
+      "domain": [
+        "Sample"
+      ],
+      "range": [
+        "SamplingEvent"
+      ],
+      "readable_direction": "Sample → SamplingEvent"
+    },
+    "HAS_MATRIX": {
+      "category": "Water Domain",
+      "definition": "Specifies the water or residual matrix.",
+      "properties": [
+        "role"
+      ],
+      "domain": [
+        "Sample",
+        "Experiment"
+      ],
+      "range": [
+        "WaterMatrix"
+      ],
+      "readable_direction": "Sample/Experiment → WaterMatrix"
+    },
+    "PART_OF_SYSTEM": {
+      "category": "Water Domain",
+      "definition": "Places infrastructure inside a managed water system.",
+      "properties": [
+        "role"
+      ],
+      "domain": [
+        "TreatmentPlant",
+        "TreatmentTrain",
+        "TreatmentUnit"
+      ],
+      "range": [
+        "WaterSystem"
+      ],
+      "readable_direction": "Component → WaterSystem"
+    },
+    "HAS_TRAIN": {
+      "category": "Water Domain",
+      "definition": "Links a plant to an ordered treatment train.",
+      "properties": [
+        "trainNumber"
+      ],
+      "domain": [
+        "TreatmentPlant"
+      ],
+      "range": [
+        "TreatmentTrain"
+      ],
+      "readable_direction": "TreatmentPlant → TreatmentTrain"
+    },
+    "HAS_UNIT": {
+      "category": "Water Domain",
+      "definition": "Links a treatment train to one of its physical units.",
+      "properties": [
+        "sequence"
+      ],
+      "domain": [
+        "TreatmentTrain"
+      ],
+      "range": [
+        "TreatmentUnit"
+      ],
+      "readable_direction": "TreatmentTrain → TreatmentUnit"
+    },
+    "IMPLEMENTS": {
+      "category": "Water Domain",
+      "definition": "Identifies the process performed by a physical treatment unit.",
+      "properties": [
+        "configuration"
+      ],
+      "domain": [
+        "TreatmentUnit"
+      ],
+      "range": [
+        "TreatmentProcess"
+      ],
+      "readable_direction": "TreatmentUnit → TreatmentProcess"
+    },
+    "PRECEDES": {
+      "category": "Water Domain",
+      "definition": "Represents treatment-train order.",
+      "properties": [
+        "sequenceGap"
+      ],
+      "domain": [
+        "TreatmentUnit",
+        "TreatmentProcess"
+      ],
+      "range": [
+        "TreatmentUnit",
+        "TreatmentProcess"
+      ],
+      "readable_direction": "Earlier → Later"
+    },
+    "FEEDS": {
+      "category": "Water Domain",
+      "definition": "Represents water flow into a plant or unit.",
+      "properties": [
+        "flowRate",
+        "unit"
+      ],
+      "domain": [
+        "WaterSource",
+        "TreatmentUnit"
+      ],
+      "range": [
+        "TreatmentPlant",
+        "TreatmentUnit"
+      ],
+      "readable_direction": "Source → Destination"
+    },
+    "FLOWS_TO": {
+      "category": "Water Domain",
+      "definition": "Represents directed water flow between units or to discharge/reuse.",
+      "properties": [
+        "flowRate",
+        "unit"
+      ],
+      "domain": [
+        "TreatmentUnit"
+      ],
+      "range": [
+        "TreatmentUnit",
+        "Location"
+      ],
+      "readable_direction": "Upstream → Downstream"
+    },
+    "TREATS": {
+      "category": "Water Domain",
+      "definition": "States that a process or unit treats a water matrix or chemical substance.",
+      "properties": [
+        "evidenceStatus"
+      ],
+      "domain": [
+        "TreatmentProcess",
+        "TreatmentUnit"
+      ],
+      "range": [
+        "WaterMatrix",
+        "ChemicalSubstance"
+      ],
+      "readable_direction": "TreatmentProcess | TreatmentUnit -> WaterMatrix | ChemicalSubstance"
+    },
+    "TARGETS": {
+      "category": "Water Domain",
+      "definition": "Identifies the intended target of treatment or intervention.",
+      "properties": [
+        "priority"
+      ],
+      "domain": [
+        "TreatmentProcess",
+        "Intervention"
+      ],
+      "range": [
+        "Contaminant",
+        "Metric",
+        "Challenge"
+      ],
+      "readable_direction": "Action → Target"
+    },
+    "REMOVES": {
+      "category": "Water Domain",
+      "definition": "States that removal was evaluated; magnitude belongs on an Observation.",
+      "properties": [
+        "evidenceStatus"
+      ],
+      "domain": [
+        "TreatmentProcess",
+        "TreatmentUnit"
+      ],
+      "range": [
+        "Contaminant"
+      ],
+      "readable_direction": "Treatment → Contaminant"
+    },
+    "TRANSFORMS": {
+      "category": "Water Domain",
+      "definition": "Represents chemical or biological transformation.",
+      "properties": [
+        "productKnown",
+        "evidenceLevel"
+      ],
+      "domain": [
+        "TreatmentProcess",
+        "Microorganism"
+      ],
+      "range": [
+        "Contaminant"
+      ],
+      "readable_direction": "Actor → Contaminant"
+    },
+    "PRODUCES_RESIDUAL": {
+      "category": "Water Domain",
+      "definition": "Links treatment to a generated residual stream.",
+      "properties": [
+        "amount",
+        "unit"
+      ],
+      "domain": [
+        "TreatmentProcess",
+        "TreatmentUnit"
+      ],
+      "range": [
+        "Residual"
+      ],
+      "readable_direction": "Treatment → Residual"
+    },
+    "APPLIES_INTERVENTION": {
+      "category": "Water Domain",
+      "definition": "Links a study or system to a deliberate change.",
+      "properties": [
+        "startDate",
+        "endDate"
+      ],
+      "domain": [
+        "Experiment",
+        "WaterSystem"
+      ],
+      "range": [
+        "Intervention"
+      ],
+      "readable_direction": "Study/System → Intervention"
+    },
+    "AFFECTS": {
+      "category": "Water Domain",
+      "definition": "Represents a sentence-supported influence on scientific, environmental, technical, biological, resource, or system outcomes.",
+      "properties": [
+        "direction",
+        "confidence"
+      ],
+      "domain": [
+        "Intervention",
+        "Contaminant",
+        "Condition",
+        "Technology",
+        "Policy",
+        "EnvironmentalProcess"
+      ],
+      "range": [
+        "Metric",
+        "WaterSystem",
+        "Microorganism",
+        "Impact",
+        "ScientificConcept",
+        "EnvironmentalCompartment",
+        "Material",
+        "ChemicalSubstance",
+        "BiologicalEntity",
+        "Resource",
+        "Property"
+      ],
+      "readable_direction": "Intervention | Contaminant | Condition | Technology | Policy | EnvironmentalProcess → Metric | WaterSystem | Microorganism | Impact | ScientificConcept | EnvironmentalCompartment | Material | ChemicalSubstance | BiologicalEntity | Resource | Property"
+    },
+    "CAUSES": {
+      "category": "Water Domain",
+      "definition": "Represents an explicitly supported causal relationship across water-domain and cross-domain concepts.",
+      "properties": [
+        "evidenceLevel"
+      ],
+      "domain": [
+        "Intervention",
+        "Contaminant",
+        "Condition",
+        "EnvironmentalProcess",
+        "ChemicalSubstance",
+        "Mechanism",
+        "Technology",
+        "Policy"
+      ],
+      "range": [
+        "Impact",
+        "Challenge",
+        "ScientificConcept",
+        "EnvironmentalProcess",
+        "Property",
+        "Resource"
+      ],
+      "readable_direction": "Intervention | Contaminant | Condition | EnvironmentalProcess | ChemicalSubstance | Mechanism | Technology | Policy → Impact | Challenge | ScientificConcept | EnvironmentalProcess | Property | Resource"
+    },
+    "CONSUMES_ENERGY": {
+      "category": "Water Domain",
+      "definition": "Links a system component to an energy-use observation.",
+      "properties": [
+        "energyType"
+      ],
+      "domain": [
+        "TreatmentUnit",
+        "TreatmentProcess",
+        "WaterSystem"
+      ],
+      "range": [
+        "Observation"
+      ],
+      "readable_direction": "Consumer → Observation"
+    },
+    "EMITS": {
+      "category": "Water Domain",
+      "definition": "Links a system or process to an emitted substance or quantified emission.",
+      "properties": [
+        "pathway"
+      ],
+      "domain": [
+        "TreatmentProcess",
+        "TreatmentUnit",
+        "WaterSystem"
+      ],
+      "range": [
+        "Contaminant",
+        "Observation"
+      ],
+      "readable_direction": "Emitter → Emission"
+    },
+    "LOCATED_IN": {
+      "category": "Context",
+      "definition": "Provides spatial context.",
+      "properties": [
+        "validFrom",
+        "validTo"
+      ],
+      "domain": [
+        "WaterSystem",
+        "TreatmentPlant",
+        "Location"
+      ],
+      "range": [
+        "Location"
+      ],
+      "readable_direction": "Subject → Location"
+    },
+    "GOVERNED_BY": {
+      "category": "Context",
+      "definition": "Links systems or results to applicable requirements.",
+      "properties": [
+        "complianceStatus"
+      ],
+      "domain": [
+        "WaterSystem",
+        "TreatmentPlant",
+        "Observation"
+      ],
+      "range": [
+        "Standard"
+      ],
+      "readable_direction": "Subject → Standard"
+    },
+    "HAS_LIMITATION": {
+      "category": "Context",
+      "definition": "Records a reported limitation or risk.",
+      "properties": [
+        "severity",
+        "evidence"
+      ],
+      "domain": [
+        "AISystem",
+        "Model",
+        "Method",
+        "Experiment",
+        "TreatmentProcess"
+      ],
+      "range": [
+        "Challenge"
+      ],
+      "readable_direction": "Subject → Challenge"
+    },
+    "PROPOSES": {
+      "category": "AI / Workflow",
+      "definition": "Links a publication to a contribution it introduces.",
+      "properties": [
+        "noveltyType"
+      ],
+      "domain": [
+        "Publication"
+      ],
+      "range": [
+        "AISystem",
+        "Model",
+        "Method",
+        "Intervention",
+        "Technology",
+        "ScientificConcept",
+        "Mechanism",
+        "Policy"
+      ],
+      "readable_direction": "Publication → AISystem | Model | Method | Intervention | Technology | ScientificConcept | Mechanism | Policy"
+    },
+    "HAS_AGENT": {
+      "category": "AI / Workflow",
+      "definition": "Links an AI system to a component agent.",
+      "properties": [
+        "sequence",
+        "required"
+      ],
+      "domain": [
+        "AISystem"
+      ],
+      "range": [
+        "Agent"
+      ],
+      "readable_direction": "AISystem → Agent"
+    },
+    "USES_MODEL": {
+      "category": "AI / Workflow",
+      "definition": "Links a system or agent to an underlying model.",
+      "properties": [
+        "configuration"
+      ],
+      "domain": [
+        "AISystem",
+        "Agent",
+        "Model"
+      ],
+      "range": [
+        "Model"
+      ],
+      "readable_direction": "AISystem | Agent | Model → Model"
+    },
+    "USES_TOOL": {
+      "category": "AI / Workflow",
+      "definition": "Links a workflow component to an external implementation tool.",
+      "properties": [
+        "mode"
+      ],
+      "domain": [
+        "AISystem",
+        "Agent",
+        "Method",
+        "Model"
+      ],
+      "range": [
+        "Tool",
+        "SoftwareArtifact"
+      ],
+      "readable_direction": "AISystem | Agent | Method | Model → Tool | SoftwareArtifact"
+    },
+    "USES_DATASET": {
+      "category": "AI / Workflow",
+      "definition": "Links a study or system to a dataset.",
+      "properties": [
+        "purpose",
+        "split"
+      ],
+      "domain": [
+        "Publication",
+        "AISystem",
+        "Model"
+      ],
+      "range": [
+        "Dataset"
+      ],
+      "readable_direction": "User → Dataset"
+    },
+    "USES_METHOD": {
+      "category": "AI / Workflow",
+      "definition": "Links a study, system, or experiment to a method.",
+      "properties": [
+        "role"
+      ],
+      "domain": [
+        "Publication",
+        "AISystem",
+        "Experiment",
+        "Model"
+      ],
+      "range": [
+        "Method"
+      ],
+      "readable_direction": "Publication | AISystem | Experiment | Model → Method"
+    },
+    "PERFORMS": {
+      "category": "AI / Workflow",
+      "definition": "Identifies a task performed.",
+      "properties": [
+        "autonomyLevel"
+      ],
+      "domain": [
+        "AISystem",
+        "Agent",
+        "Model"
+      ],
+      "range": [
+        "Task"
+      ],
+      "readable_direction": "Performer → Task"
+    },
+    "PREDICTS": {
+      "category": "AI / Workflow",
+      "definition": "Links a model to a predicted result or target metric.",
+      "properties": [
+        "horizon",
+        "uncertainty"
+      ],
+      "domain": [
+        "Model",
+        "AISystem"
+      ],
+      "range": [
+        "Observation",
+        "Metric"
+      ],
+      "readable_direction": "Predictor → Prediction"
+    },
+    "OPTIMIZES": {
+      "category": "AI / Workflow",
+      "definition": "Identifies the variable, objective, or system optimized.",
+      "properties": [
+        "objective",
+        "constraints"
+      ],
+      "domain": [
+        "Model",
+        "AISystem",
+        "Intervention"
+      ],
+      "range": [
+        "Parameter",
+        "Metric",
+        "WaterSystem",
+        "Resource",
+        "Property",
+        "Impact"
+      ],
+      "readable_direction": "Model | AISystem | Intervention → Parameter | Metric | WaterSystem | Resource | Property | Impact"
+    },
+    "EVALUATED_ON": {
+      "category": "AI / Workflow",
+      "definition": "Identifies evaluation data or experiment.",
+      "properties": [
+        "split"
+      ],
+      "domain": [
+        "AISystem",
+        "Model"
+      ],
+      "range": [
+        "Dataset",
+        "Experiment"
+      ],
+      "readable_direction": "Evaluated item → Evaluation basis"
+    },
+    "EVALUATED_BY": {
+      "category": "AI / Workflow",
+      "definition": "Identifies an evaluation measure.",
+      "properties": [
+        "value",
+        "unit"
+      ],
+      "domain": [
+        "AISystem",
+        "Model",
+        "Intervention"
+      ],
+      "range": [
+        "Metric"
+      ],
+      "readable_direction": "Evaluated item → Metric"
+    },
+    "OUTPERFORMS": {
+      "category": "AI / Workflow",
+      "definition": "Represents a source-supported comparative result.",
+      "properties": [
+        "metric",
+        "delta",
+        "condition"
+      ],
+      "domain": [
+        "AISystem",
+        "Model",
+        "Intervention"
+      ],
+      "range": [
+        "AISystem",
+        "Model",
+        "Intervention"
+      ],
+      "readable_direction": "Winner → Baseline"
+    }
+  },
+  "parents": {}
+}

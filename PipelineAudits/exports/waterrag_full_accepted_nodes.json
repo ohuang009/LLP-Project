@@ -1,0 +1,1778 @@
+{
+  "run_id": "waterrag_full_node_pipeline_chunked_20260805T101654Z",
+  "source_filename": "waterrag-a-multiagent-retrieval-augmented-generation-framework-to-support-water-industry-transitions-to-net-zero.pdf",
+  "scope": "full_paper",
+  "validation_status": "PASS",
+  "llm": {
+    "enabled": true,
+    "used": true,
+    "provider": "ollama",
+    "model": "deepseek-r1:7b",
+    "reason": "The configured model completed structured candidate adjudication.",
+    "rubric_version": "cross_paper_nodes_v2",
+    "rubric_hash": "8c9c8f3f5bac8b4c4c325207724106b24218acb25c2baa5944147425c82487b9"
+  },
+  "counts": {
+    "accepted_mentions": 181,
+    "canonical_entities": 46,
+    "node_review_candidates": 181,
+    "rejected_node_candidates": 717,
+    "similar_node_candidates": 0,
+    "reference_mentions_resolved": 3,
+    "reference_review_pending": 19,
+    "reference_mentions_ignored": 11,
+    "merged_entities": 46,
+    "relationships": 0,
+    "lexicon_entries": 33
+  },
+  "accepted_canonical_nodes": [
+    {
+      "entity_id": "entity_08f2e8fbcdbf36abfa96",
+      "canonical_name": "three agent components",
+      "node_type": "Agent",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_2b54b5d215d9"
+      ],
+      "aliases": [
+        "three agent components"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_e764e68216adfa2eeb13",
+          "quote": "As shown in Figure 2, WaterRAG consists of three agent components: retrieval agent, review agent, and evaluation agent.",
+          "span": "three agent components",
+          "pages": [
+            4
+          ],
+          "sentence_id": "sent_2b54b5d215d9",
+          "section_title": "METHODS",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_afe2fc8d4f165de29891",
+      "canonical_name": "Complete reranking prompt",
+      "node_type": "AISystem",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_8ec75625ce40"
+      ],
+      "aliases": [
+        "Complete reranking prompt",
+        "The complete reranking prompt"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_2cd97a72b3553c09b65c",
+          "quote": "The complete reranking prompt is provided in Text S2.",
+          "span": "The complete reranking prompt",
+          "pages": [
+            3
+          ],
+          "sentence_id": "sent_8ec75625ce40",
+          "section_title": "METHODS",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_a5a3ed9604910d517abc",
+      "canonical_name": "fine-tuning, retrieval-augmented generation (RAG) frameworks",
+      "node_type": "AISystem",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_5d127ef9d33f"
+      ],
+      "aliases": [
+        "fine-tuning, retrieval-augmented generation (RAG) frameworks"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_42ddb9fde590d124c000",
+          "quote": "Beyond fine-tuning, retrieval-augmented generation (RAG) frameworks have emerged as a promising solution for empowering LLMs with domain-specific knowledge.",
+          "span": "fine-tuning, retrieval-augmented generation (RAG) frameworks",
+          "pages": [
+            2
+          ],
+          "sentence_id": "sent_5d127ef9d33f",
+          "section_title": "INTRODUCTION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_98fb52c9c12a603fa13f",
+      "canonical_name": "Multiagent System",
+      "node_type": "AISystem",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_57038af05de9"
+      ],
+      "aliases": [
+        "a multiagent system",
+        "Multiagent System"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_c313d8e41a36e637ddd6",
+          "quote": "WaterRAG therefore integrates a multiagent system where role-specific LLM agents collaborate via iterative handoffs.",
+          "span": "a multiagent system",
+          "pages": [
+            4
+          ],
+          "sentence_id": "sent_57038af05de9",
+          "section_title": "METHODS",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_509e36c66b1a33b483c0",
+      "canonical_name": "Naive RAG",
+      "node_type": "AISystem",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_a9feec35bd8f"
+      ],
+      "aliases": [
+        "Naive RAG"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_48e52c8074edad2c3fa8",
+          "quote": "Therefore, WaterRAG significantly outperformed Naive RAG and GPT-4.1 Search in retrieval performance.",
+          "span": "Naive RAG",
+          "pages": [
+            9,
+            10
+          ],
+          "sentence_id": "sent_a9feec35bd8f",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "ai_waterrag",
+      "canonical_name": "WaterRAG",
+      "node_type": "AISystem",
+      "mention_count": 99,
+      "sentence_ids": [
+        "sent_00b23eac0f2e",
+        "sent_01a37f412b30",
+        "sent_03ed1dc8bf00",
+        "sent_0b89fd8e4b2d",
+        "sent_0cda6c34874f",
+        "sent_0d90702661b5",
+        "sent_0fa48393c1c5",
+        "sent_11f5926ea0a2",
+        "sent_1942effe2117",
+        "sent_19bc62e029d6",
+        "sent_215780cdae77",
+        "sent_22bc3d69ec11",
+        "sent_28b10806ba3d",
+        "sent_296479ff62d5",
+        "sent_2a00de3f85ac",
+        "sent_2b54b5d215d9",
+        "sent_2fa461c899a4",
+        "sent_3070c6958533",
+        "sent_341fa972060f",
+        "sent_3473ffc76f1b",
+        "sent_37505fbb07cb",
+        "sent_3874aad995b1",
+        "sent_3c4c1f44e3c1",
+        "sent_43b5a441f23d",
+        "sent_4570ae9e76a1",
+        "sent_4b03ae08167e",
+        "sent_4b80bca57e10",
+        "sent_4d6b477ca205",
+        "sent_57038af05de9",
+        "sent_5b0617970179",
+        "sent_5b908bd2e991",
+        "sent_5d83958bacf1",
+        "sent_5db03a4f4818",
+        "sent_611023653917",
+        "sent_64d260f19bfb",
+        "sent_68473f4536e2",
+        "sent_732bfe4ede87",
+        "sent_7414190cc892",
+        "sent_7545c75f1b27",
+        "sent_764c763281d6",
+        "sent_7a8ab042a975",
+        "sent_7fa7d19d0ed3",
+        "sent_80cb8cafd1aa",
+        "sent_833d8a805a0b",
+        "sent_85c599ade355",
+        "sent_899e58d65cf5",
+        "sent_99563181320d",
+        "sent_9b9c1e8710cb",
+        "sent_a36c4325d689",
+        "sent_a9feec35bd8f",
+        "sent_aa3dbd40a89b",
+        "sent_abf14ddef742",
+        "sent_ae318cbaaaa2",
+        "sent_af6f423e3486",
+        "sent_b009800c705c",
+        "sent_b13d544a89f8",
+        "sent_b1ca1dcd8312",
+        "sent_b446261dd3dc",
+        "sent_b4981e9d6944",
+        "sent_b5045eead9af",
+        "sent_b508075d9499",
+        "sent_b88f994ee239",
+        "sent_ba8510be6a70",
+        "sent_bdb1cff51bc3",
+        "sent_bf68fe8da3d6",
+        "sent_c3922803b106",
+        "sent_c3ac86fccc94",
+        "sent_c4f30bfb7da1",
+        "sent_c9e61e612a7a",
+        "sent_cb6d13ed01d3",
+        "sent_cfb013c734cf",
+        "sent_d066816235b9",
+        "sent_d0cb4bd29412",
+        "sent_d4aff4af8b07",
+        "sent_d4c7ed97d242",
+        "sent_d926260d9f03",
+        "sent_e2fd4e56c2b1",
+        "sent_e3506b35f87a",
+        "sent_e362af007a87",
+        "sent_e374268ff566",
+        "sent_e77603e485ee",
+        "sent_e9022c6102a6",
+        "sent_e91e84850d6a",
+        "sent_e9dd7c0ec31b",
+        "sent_eb1bc1ad9dd9",
+        "sent_eb996e5b9edf",
+        "sent_eba599adce9d",
+        "sent_ef9122879d34",
+        "sent_f1091d968d7b",
+        "sent_f53e46ac54a1",
+        "sent_f8f5ef4443b6",
+        "sent_f9fdb98a2a98"
+      ],
+      "aliases": [
+        "WaterRAG"
+      ],
+      "extraction_methods": [
+        "deterministic_reference_resolution",
+        "persistent_lexicon"
+      ],
+      "judges": [
+        "deterministic_reference_resolver",
+        "persistent_lexicon_exact_match"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_4c81869630e7944e53a9",
+          "quote": "Therefore, we introduce WaterRAG, a multiagent retrieval-augmented generation (RAG) framework that couples LLM reasoning with verifiable wastewater knowledge.",
+          "span": "WaterRAG",
+          "pages": [
+            1
+          ],
+          "sentence_id": "sent_aa3dbd40a89b",
+          "section_title": "Abstract",
+          "reference_resolution": null
+        },
+        {
+          "mention_id": "mention_a5bf07be2704638cc81c",
+          "quote": "WaterRAG integrates a selective database of 7637 peer-reviewed studies and 11 engineering references on wastewater treatment.",
+          "span": "WaterRAG",
+          "pages": [
+            1
+          ],
+          "sentence_id": "sent_f9fdb98a2a98",
+          "section_title": "Abstract",
+          "reference_resolution": null
+        },
+        {
+          "mention_id": "mention_ee9823229db9a004b12d",
+          "quote": "Through iterative collaboration among retrieval, review, and evaluation agents, WaterRAG produces evidence-based output for three critical applications in wastewater management: (i) wastewater expert-level question answering, (ii) literature review on specific topics, and (iii) plantspecific engineering scientific support.",
+          "span": "WaterRAG",
+          "pages": [
+            1
+          ],
+          "sentence_id": "sent_0cda6c34874f",
+          "section_title": "Abstract",
+          "reference_resolution": null
+        },
+        {
+          "mention_id": "mention_68f02e8974b10c81c5ee",
+          "quote": "In benchmarking of 370 technical questions, WaterRAG achieved an 80.5% answer correctness rate on professional wastewater treatment questions, outperforming standalone GPT-4.1 (64.9%).",
+          "span": "WaterRAG",
+          "pages": [
+            1
+          ],
+          "sentence_id": "sent_e362af007a87",
+          "section_title": "Abstract",
+          "reference_resolution": null
+        },
+        {
+          "mention_id": "mention_63461dafa2847fc63ba1",
+          "quote": "WaterRAG also generated a more comprehensive citation-supported review, with quality improving across refinement iterations.",
+          "span": "WaterRAG",
+          "pages": [
+            1
+          ],
+          "sentence_id": "sent_7414190cc892",
+          "section_title": "Abstract",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_2a72e1d878194b7060f2",
+      "canonical_name": "incorrect categorization",
+      "node_type": "Challenge",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_76b155cca747"
+      ],
+      "aliases": [
+        "incorrect categorization"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_ba45e2e3f9f134e126c3",
+          "quote": "This resulted in only 20 cited references from Naive RAG in the example review task, with incorrect categorization of NOB and anammox under AOB in the conclusion.",
+          "span": "incorrect categorization",
+          "pages": [
+            9,
+            10
+          ],
+          "sentence_id": "sent_76b155cca747",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_a6df8a94ad65ceec11cf",
+      "canonical_name": "addition",
+      "node_type": "Claim",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_f7f64f3b90e3"
+      ],
+      "aliases": [
+        "addition"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_f27234f7412c0241c294",
+          "quote": "In addition to retrieval failure, 38% of errors were attributed to missing knowledge coverage in the knowledge base.",
+          "span": "addition",
+          "pages": [
+            7
+          ],
+          "sentence_id": "sent_f7f64f3b90e3",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_6ac2febb43027d99451a",
+      "canonical_name": "All comparisons",
+      "node_type": "Claim",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_c594b96fca2e"
+      ],
+      "aliases": [
+        "All comparisons"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_66147beda42d7eab4fba",
+          "quote": "All comparisons yielded p < 0.001, confirming significant differences (Tables S11 − S13).",
+          "span": "All comparisons",
+          "pages": [
+            6
+          ],
+          "sentence_id": "sent_c594b96fca2e",
+          "section_title": "METHODS",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_1a05367a30e979edf909",
+      "canonical_name": "correct answer",
+      "node_type": "Claim",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_3874aad995b1"
+      ],
+      "aliases": [
+        "correct answer",
+        "the correct answer"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_8918e727b8fdde66b72e",
+          "quote": "In contrast, WaterRAG provided the correct answer after synthesizing multiple article 5,36 − 38 sources.",
+          "span": "the correct answer",
+          "pages": [
+            7
+          ],
+          "sentence_id": "sent_3874aad995b1",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_3afd383496e65382ee2d",
+      "canonical_name": "larger scale",
+      "node_type": "Claim",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_91f9e9eb8f3f"
+      ],
+      "aliases": [
+        "larger scale",
+        "the larger scale"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_b3de7bd0238a2ee59ef6",
+          "quote": "The relatively smaller improvement margin for GPT can be attributed to the larger scale.",
+          "span": "the larger scale",
+          "pages": [
+            6
+          ],
+          "sentence_id": "sent_91f9e9eb8f3f",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_dfc701ffa4ebccb3be72",
+      "canonical_name": "meaningful gains",
+      "node_type": "Claim",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_ae318cbaaaa2"
+      ],
+      "aliases": [
+        "meaningful gains"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_caa1672f8ce7711e43af",
+          "quote": "Notably, WaterRAG also delivers meaningful gains when paired with locally deployed opensource models (e.g., WaterRAG − Llama-3.1 − 8B: 64.12%), enabling more cost-effective and practical applications.",
+          "span": "meaningful gains",
+          "pages": [
+            11
+          ],
+          "sentence_id": "sent_ae318cbaaaa2",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_1d0c4e3a3ed347e654dc",
+      "canonical_name": "relatively smaller improvement margin",
+      "node_type": "Claim",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_91f9e9eb8f3f"
+      ],
+      "aliases": [
+        "relatively smaller improvement margin",
+        "The relatively smaller improvement margin"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_e09766e7183ccc58c91a",
+          "quote": "The relatively smaller improvement margin for GPT can be attributed to the larger scale.",
+          "span": "The relatively smaller improvement margin",
+          "pages": [
+            6
+          ],
+          "sentence_id": "sent_91f9e9eb8f3f",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "contaminant_ammonia",
+      "canonical_name": "ammonia",
+      "node_type": "Contaminant",
+      "mention_count": 3,
+      "sentence_ids": [
+        "sent_d73fd460c13e",
+        "sent_e9022c6102a6",
+        "sent_f7b46f83784b"
+      ],
+      "aliases": [
+        "ammonia",
+        "Ammonia"
+      ],
+      "extraction_methods": [
+        "persistent_lexicon"
+      ],
+      "judges": [
+        "persistent_lexicon_exact_match"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_2efcaee35a81bba15c9a",
+          "quote": "For example, as shown in Question 1 in Figure 4, when asked about the relationship between N 2 O emissions from NH 2 OH oxidation pathways and the Ammonia Oxidation Rate (AOR), all standalone models incorrectly selected “Positively linearly” or “Negatively linearly”.",
+          "span": "Ammonia",
+          "pages": [
+            6
+          ],
+          "sentence_id": "sent_d73fd460c13e",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        },
+        {
+          "mention_id": "mention_c1377be8718edd4b7d14",
+          "quote": "Figure 6 shows the partial outputs of three different systems in an example review task (“Ammonia-oxidizing microorganisms (AOM) in wastewater and their N O emissions”).",
+          "span": "Ammonia",
+          "pages": [
+            9
+          ],
+          "sentence_id": "sent_f7b46f83784b",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        },
+        {
+          "mention_id": "mention_3a4a922672cb8ad2758e",
+          "quote": "In contrast to GPT-4.1’s conclusion that “ AOB are the dominant nitrif iers in most systems, especially under high-ammonia conditions, but AOA and comammox play important roles in specific niches”, WaterRAG emphasized the rising trends of ecological niches and engineering roles of comammox and AOA in various wastewater treatment scenarios.",
+          "span": "ammonia",
+          "pages": [
+            9
+          ],
+          "sentence_id": "sent_e9022c6102a6",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "contaminant_nitrate",
+      "canonical_name": "nitrate",
+      "node_type": "Contaminant",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_e2fd4e56c2b1"
+      ],
+      "aliases": [
+        "nitrate"
+      ],
+      "extraction_methods": [
+        "persistent_lexicon"
+      ],
+      "judges": [
+        "persistent_lexicon_exact_match"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_2f14d55ddb5f457cb59c",
+          "quote": "In contrast, WaterRAG not only provides mechanistic explanations but also offers verifiable quantitative evidence based on engineering documents, emphasizing diminishing marginal returns: “ Increasing a f rom 6.5 to 17.9 reduces f inal nitrate by only 2.8 mgN/L (from 4.9 mgN/L to 2.1 mgN/L) ··· When a = 15, 27% of the system's potential capacity is consumed by dissolved oxygen removal, leaving only 73% available We further analyzed the incorrect answers generated by WaterRAG (GPT-4.1 as generator) in the QA task and identified three principal causes of error (Table S6), with representative examples provided in Table S7 and a more detailed analysis in Text S10.",
+          "span": "nitrate",
+          "pages": [
+            6
+          ],
+          "sentence_id": "sent_e2fd4e56c2b1",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_3fe53ba06e9ff92a2c21",
+      "canonical_name": "the most relevant chunks",
+      "node_type": "Dataset",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_a36c4325d689"
+      ],
+      "aliases": [
+        "the most relevant chunks"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_4ac97c5ec1f1c0f7bdc8",
+          "quote": "These procedures ensure that WaterRAG can retrieve the most relevant chunks.",
+          "span": "the most relevant chunks",
+          "pages": [
+            7,
+            8
+          ],
+          "sentence_id": "sent_a36c4325d689",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_23fe3741c1e1e6f6416a",
+      "canonical_name": "only 20 cited references",
+      "node_type": "DataSource",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_76b155cca747"
+      ],
+      "aliases": [
+        "only 20 cited references"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_aeb318533d814de0789f",
+          "quote": "This resulted in only 20 cited references from Naive RAG in the example review task, with incorrect categorization of NOB and anammox under AOB in the conclusion.",
+          "span": "only 20 cited references",
+          "pages": [
+            9,
+            10
+          ],
+          "sentence_id": "sent_76b155cca747",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_d56d5ba9a1474005147a",
+      "canonical_name": "achieving net-zero carbon emissions in wastewater treatment",
+      "node_type": "EnvironmentalProcess",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_7b779561a8ee"
+      ],
+      "aliases": [
+        "achieving net-zero carbon emissions in wastewater treatment",
+        "Achieving net-zero carbon emissions in wastewater treatment"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_60e90b760d4870cd7a42",
+          "quote": "Achieving net-zero carbon emissions in wastewater treatment requires a complex, interdisciplinary information integration.",
+          "span": "Achieving net-zero carbon emissions in wastewater treatment",
+          "pages": [
+            1
+          ],
+          "sentence_id": "sent_7b779561a8ee",
+          "section_title": "Abstract",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_d3e38fb68ac33a34e719",
+      "canonical_name": "systematic ablation experiments",
+      "node_type": "Experiment",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_f1091d968d7b"
+      ],
+      "aliases": [
+        "systematic ablation experiments"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_5aa030c60a6bf7bd76e9",
+          "quote": "To experimentally investigate the contribution of this architecture, we conducted systematic ablation experiments comparing WaterRAG against progressively simplified singlepass variants (Table S10).",
+          "span": "systematic ablation experiments",
+          "pages": [
+            10
+          ],
+          "sentence_id": "sent_f1091d968d7b",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "metric_energy_use",
+      "canonical_name": "energy consumption",
+      "node_type": "Metric",
+      "mention_count": 2,
+      "sentence_ids": [
+        "sent_70537cf50c57",
+        "sent_c70b81bbb9c7"
+      ],
+      "aliases": [
+        "energy consumption"
+      ],
+      "extraction_methods": [
+        "persistent_lexicon"
+      ],
+      "judges": [
+        "persistent_lexicon_exact_match"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_b4b7a9fe413eb867bdb0",
+          "quote": "The energy consumption of model execution was estimated following the EPOCH AI methodology, with detailed procedures described in Text S12.",
+          "span": "energy consumption",
+          "pages": [
+            6
+          ],
+          "sentence_id": "sent_c70b81bbb9c7",
+          "section_title": "METHODS",
+          "reference_resolution": null
+        },
+        {
+          "mention_id": "mention_1b0795fe8054705ef8a0",
+          "quote": "Operational costs, token usage, energy consumption, and inference latencies for all models are summarized in Tables S9 and S10.",
+          "span": "energy consumption",
+          "pages": [
+            6
+          ],
+          "sentence_id": "sent_70537cf50c57",
+          "section_title": "METHODS",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "model_gpt4",
+      "canonical_name": "GPT-4",
+      "node_type": "Model",
+      "mention_count": 2,
+      "sentence_ids": [
+        "sent_080120e18e48",
+        "sent_99a92b54c5ad"
+      ],
+      "aliases": [
+        "GPT-4"
+      ],
+      "extraction_methods": [
+        "persistent_lexicon"
+      ],
+      "judges": [
+        "persistent_lexicon_exact_match"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_e02153e731e0aecbf3a4",
+          "quote": "In the study by Xu et al., WaterGPT surpassed a small-scale baseline model (Llama 3 − 8B) but did not match mainstream large-scale LLMs such as GPT-4.",
+          "span": "GPT-4",
+          "pages": [
+            2
+          ],
+          "sentence_id": "sent_99a92b54c5ad",
+          "section_title": "INTRODUCTION",
+          "reference_resolution": null
+        },
+        {
+          "mention_id": "mention_8bf2bcb1cc9c06a5fddf",
+          "quote": "When handling 20 real-world tumor diagnosis cases, this system improved decision-making completeness and accuracy from 30.3% with GPT-4 to 87.2%.",
+          "span": "GPT-4",
+          "pages": [
+            2
+          ],
+          "sentence_id": "sent_080120e18e48",
+          "section_title": "INTRODUCTION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "model_gpt41",
+      "canonical_name": "GPT-4.1",
+      "node_type": "Model",
+      "mention_count": 27,
+      "sentence_ids": [
+        "sent_11f5926ea0a2",
+        "sent_1753a2d1cfb9",
+        "sent_215780cdae77",
+        "sent_27084f07c230",
+        "sent_43b5a441f23d",
+        "sent_4ca678ec6abd",
+        "sent_5d83958bacf1",
+        "sent_64c02adaa6c2",
+        "sent_8de7de6cad10",
+        "sent_a4235fce8890",
+        "sent_b446261dd3dc",
+        "sent_b8e9556e73da",
+        "sent_bc32517049a1",
+        "sent_bf68fe8da3d6",
+        "sent_c2ffad76fc46",
+        "sent_c3ac86fccc94",
+        "sent_d1c0947a3504",
+        "sent_e13acdaef9e5",
+        "sent_e2fd4e56c2b1",
+        "sent_e362af007a87",
+        "sent_e374268ff566",
+        "sent_e9022c6102a6",
+        "sent_e91e84850d6a",
+        "sent_eb996e5b9edf",
+        "sent_f1683bda91ef"
+      ],
+      "aliases": [
+        "GPT 4.1",
+        "GPT-4.1"
+      ],
+      "extraction_methods": [
+        "deterministic_reference_resolution",
+        "persistent_lexicon"
+      ],
+      "judges": [
+        "deterministic_reference_resolver",
+        "persistent_lexicon_exact_match"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_bbd7962673c238289bd0",
+          "quote": "In benchmarking of 370 technical questions, WaterRAG achieved an 80.5% answer correctness rate on professional wastewater treatment questions, outperforming standalone GPT-4.1 (64.9%).",
+          "span": "GPT-4.1",
+          "pages": [
+            1
+          ],
+          "sentence_id": "sent_e362af007a87",
+          "section_title": "Abstract",
+          "reference_resolution": null
+        },
+        {
+          "mention_id": "mention_d4a7c9979a0f22299dd2",
+          "quote": "We utilized a GPT-4.1 model to scan the titles and abstracts of the searched literature, leveraging the LLM comprehension capabilities to filter out articles that were irrelevant to the topic.",
+          "span": "GPT-4.1",
+          "pages": [
+            3
+          ],
+          "sentence_id": "sent_b8e9556e73da",
+          "section_title": "METHODS",
+          "reference_resolution": null
+        },
+        {
+          "mention_id": "mention_0c82b97bf8113e368e13",
+          "quote": "For Q&A tasks requiring rapid response, we conducted a single retrieval and tested three standalone LLMs (without retrieval) as the answer generator: Llama-3.1 − 8B, GPT-4o, and GPT-4.1.",
+          "span": "GPT-4.1",
+          "pages": [
+            4
+          ],
+          "sentence_id": "sent_27084f07c230",
+          "section_title": "METHODS",
+          "reference_resolution": null
+        },
+        {
+          "mention_id": "mention_fc12147bc00b096ef399",
+          "quote": "For review and case study tasks involving large volumes of text processing, we employed a multiagent system to perform multiple retrievals, selecting GPT-4.1 for its superior contextual processing capabilities.",
+          "span": "GPT-4.1",
+          "pages": [
+            4
+          ],
+          "sentence_id": "sent_8de7de6cad10",
+          "section_title": "METHODS",
+          "reference_resolution": null
+        },
+        {
+          "mention_id": "mention_5e5cee288461258f70e9",
+          "quote": "Specifically, when WaterRAG initially receives a review task query, one GPT-4.1 within the retrieval agent extends it with domain-specific synonyms and related terms without altering the original intent, thereby improving the retrieval coverage.",
+          "span": "GPT-4.1",
+          "pages": [
+            4
+          ],
+          "sentence_id": "sent_bf68fe8da3d6",
+          "section_title": "METHODS",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "model_llama31",
+      "canonical_name": "Llama 3.1",
+      "node_type": "Model",
+      "mention_count": 7,
+      "sentence_ids": [
+        "sent_27084f07c230",
+        "sent_4ca678ec6abd",
+        "sent_6914768eb9bf",
+        "sent_ae318cbaaaa2",
+        "sent_e374268ff566",
+        "sent_e91e84850d6a",
+        "sent_ed91a717a6bd"
+      ],
+      "aliases": [
+        "Llama 3.1",
+        "Llama-3.1"
+      ],
+      "extraction_methods": [
+        "persistent_lexicon"
+      ],
+      "judges": [
+        "persistent_lexicon_exact_match"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_87fdec87fd5625c25b5d",
+          "quote": "For Q&A tasks requiring rapid response, we conducted a single retrieval and tested three standalone LLMs (without retrieval) as the answer generator: Llama-3.1 − 8B, GPT-4o, and GPT-4.1.",
+          "span": "Llama-3.1",
+          "pages": [
+            4
+          ],
+          "sentence_id": "sent_27084f07c230",
+          "section_title": "METHODS",
+          "reference_resolution": null
+        },
+        {
+          "mention_id": "mention_9ba44ea4c13e50a3bb84",
+          "quote": "Compared to the standalone baselines of Llama-3.1 − 8B (38.79%), GPT-4o (57.82%), and GPT-4.1 (64.91%), Water- RAG elevates the correctness pass rates to 64.12, 77.87, and 80.51%, respectively, when using these LLMs as answer generators.",
+          "span": "Llama-3.1",
+          "pages": [
+            6
+          ],
+          "sentence_id": "sent_4ca678ec6abd",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        },
+        {
+          "mention_id": "mention_df47b86b265bdb99e676",
+          "quote": "WaterRAG (64.12%) elevates the standalone Llama-3.1 − 8B (38.79%) correctness pass rate exceeding the standalone GPT-4o (57.82%) and approaching the standalone GPT-4.1 (64.91%).",
+          "span": "Llama-3.1",
+          "pages": [
+            6
+          ],
+          "sentence_id": "sent_e91e84850d6a",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        },
+        {
+          "mention_id": "mention_03eb465c1fcf39cd3b60",
+          "quote": "WaterRAG shows a smaller improvement over GPT-4o (20.05%) and GPT-4.1 (15.60%) compared with Llama-3.1 8B (25.33%).",
+          "span": "Llama-3.1",
+          "pages": [
+            6
+          ],
+          "sentence_id": "sent_e374268ff566",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        },
+        {
+          "mention_id": "mention_86fb00cce277f1d47a8e",
+          "quote": "In Question 2, when asked whether anaerobic-anoxic-aerobic (AAO) or sequencing batch reactor (SBR) processes produce higher emissions, both Llama-3.1 − 8B and GPT-4o provided factually incorrect answers, stating AAO generates more emissions.",
+          "span": "Llama-3.1",
+          "pages": [
+            6
+          ],
+          "sentence_id": "sent_ed91a717a6bd",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "lex_aebde272c6860c03f08a",
+      "canonical_name": "Random Forest",
+      "node_type": "Model",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_7c313479a5a7"
+      ],
+      "aliases": [
+        "random",
+        "Random Forest"
+      ],
+      "extraction_methods": [
+        "persistent_lexicon"
+      ],
+      "judges": [
+        "persistent_lexicon_exact_match"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_57cd487ed853347e31d1",
+          "quote": "The LLM-as-a-Judge utilized the Deepeval framework to score these To validate the reliability of LLM-as-a-judge, a 10% random metrics.",
+          "span": "random",
+          "pages": [
+            5
+          ],
+          "sentence_id": "sent_7c313479a5a7",
+          "section_title": "METHODS",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_5a61e6f1b499a4c23dce",
+      "canonical_name": "the baseline model",
+      "node_type": "Model",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_6b1e1fa62bc1"
+      ],
+      "aliases": [
+        "the baseline model"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_29ff5556bad25a785ba3",
+          "quote": "fine-tuned several models based on GPT-3.5 for environmental engineering, but these did not outperform the baseline model.",
+          "span": "the baseline model",
+          "pages": [
+            2
+          ],
+          "sentence_id": "sent_6b1e1fa62bc1",
+          "section_title": "INTRODUCTION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_1d9d7712cecd5030ec57",
+      "canonical_name": "Bing-Jie Ni",
+      "node_type": "Person",
+      "mention_count": 1,
+      "sentence_ids": [
+        "metadata-sentence_b81787f254b3ec961dc7"
+      ],
+      "aliases": [
+        "Bing-Jie Ni"
+      ],
+      "extraction_methods": [
+        "structural_metadata"
+      ],
+      "judges": [
+        "structural_metadata_rule"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_0d5b7114bf5260846fa0",
+          "quote": "Mudi Zhai, Qingyun Zeng, Ruihong Qiu, Jiaying Li, Qixiang Zhu, T. David Waite, Bing-Jie Ni,,Haoran Duan",
+          "span": "",
+          "pages": [],
+          "sentence_id": "metadata-sentence_b81787f254b3ec961dc7",
+          "section_title": "",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_2d6eb48dff94546c39ba",
+      "canonical_name": "David Waite",
+      "node_type": "Person",
+      "mention_count": 1,
+      "sentence_ids": [
+        "metadata-sentence_b81787f254b3ec961dc7"
+      ],
+      "aliases": [
+        "David Waite"
+      ],
+      "extraction_methods": [
+        "structural_metadata"
+      ],
+      "judges": [
+        "structural_metadata_rule"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_8c2a19c1068d9da76bab",
+          "quote": "Mudi Zhai, Qingyun Zeng, Ruihong Qiu, Jiaying Li, Qixiang Zhu, T. David Waite, Bing-Jie Ni,,Haoran Duan",
+          "span": "",
+          "pages": [],
+          "sentence_id": "metadata-sentence_b81787f254b3ec961dc7",
+          "section_title": "",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_c4421827ba1e78fd7ebe",
+      "canonical_name": "Haoran Duan",
+      "node_type": "Person",
+      "mention_count": 1,
+      "sentence_ids": [
+        "metadata-sentence_b81787f254b3ec961dc7"
+      ],
+      "aliases": [
+        "Haoran Duan"
+      ],
+      "extraction_methods": [
+        "structural_metadata"
+      ],
+      "judges": [
+        "structural_metadata_rule"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_ff42d00d63344703f73e",
+          "quote": "Mudi Zhai, Qingyun Zeng, Ruihong Qiu, Jiaying Li, Qixiang Zhu, T. David Waite, Bing-Jie Ni,,Haoran Duan",
+          "span": "",
+          "pages": [],
+          "sentence_id": "metadata-sentence_b81787f254b3ec961dc7",
+          "section_title": "",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_e6db620cae0873dfddcf",
+      "canonical_name": "Jiaying Li",
+      "node_type": "Person",
+      "mention_count": 1,
+      "sentence_ids": [
+        "metadata-sentence_b81787f254b3ec961dc7"
+      ],
+      "aliases": [
+        "Jiaying Li"
+      ],
+      "extraction_methods": [
+        "structural_metadata"
+      ],
+      "judges": [
+        "structural_metadata_rule"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_c28621e4ca9899c8435a",
+          "quote": "Mudi Zhai, Qingyun Zeng, Ruihong Qiu, Jiaying Li, Qixiang Zhu, T. David Waite, Bing-Jie Ni,,Haoran Duan",
+          "span": "",
+          "pages": [],
+          "sentence_id": "metadata-sentence_b81787f254b3ec961dc7",
+          "section_title": "",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_4d79788a52321adb2962",
+      "canonical_name": "Mudi Zhai",
+      "node_type": "Person",
+      "mention_count": 1,
+      "sentence_ids": [
+        "metadata-sentence_b81787f254b3ec961dc7"
+      ],
+      "aliases": [
+        "Mudi Zhai"
+      ],
+      "extraction_methods": [
+        "structural_metadata"
+      ],
+      "judges": [
+        "structural_metadata_rule"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_50d13748e7e51f9cf145",
+          "quote": "Mudi Zhai, Qingyun Zeng, Ruihong Qiu, Jiaying Li, Qixiang Zhu, T. David Waite, Bing-Jie Ni,,Haoran Duan",
+          "span": "",
+          "pages": [],
+          "sentence_id": "metadata-sentence_b81787f254b3ec961dc7",
+          "section_title": "",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_690878524f03e068b1e2",
+      "canonical_name": "Qingyun Zeng",
+      "node_type": "Person",
+      "mention_count": 1,
+      "sentence_ids": [
+        "metadata-sentence_b81787f254b3ec961dc7"
+      ],
+      "aliases": [
+        "Qingyun Zeng"
+      ],
+      "extraction_methods": [
+        "structural_metadata"
+      ],
+      "judges": [
+        "structural_metadata_rule"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_9b3f3da339313ecaa094",
+          "quote": "Mudi Zhai, Qingyun Zeng, Ruihong Qiu, Jiaying Li, Qixiang Zhu, T. David Waite, Bing-Jie Ni,,Haoran Duan",
+          "span": "",
+          "pages": [],
+          "sentence_id": "metadata-sentence_b81787f254b3ec961dc7",
+          "section_title": "",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_58d3aaa09d6c939eb2b0",
+      "canonical_name": "Qixiang Zhu",
+      "node_type": "Person",
+      "mention_count": 1,
+      "sentence_ids": [
+        "metadata-sentence_b81787f254b3ec961dc7"
+      ],
+      "aliases": [
+        "Qixiang Zhu"
+      ],
+      "extraction_methods": [
+        "structural_metadata"
+      ],
+      "judges": [
+        "structural_metadata_rule"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_503ca9e21a50cea334e2",
+          "quote": "Mudi Zhai, Qingyun Zeng, Ruihong Qiu, Jiaying Li, Qixiang Zhu, T. David Waite, Bing-Jie Ni,,Haoran Duan",
+          "span": "",
+          "pages": [],
+          "sentence_id": "metadata-sentence_b81787f254b3ec961dc7",
+          "section_title": "",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_bb6d71de91e26f0017cd",
+      "canonical_name": "Ruihong Qiu",
+      "node_type": "Person",
+      "mention_count": 1,
+      "sentence_ids": [
+        "metadata-sentence_b81787f254b3ec961dc7"
+      ],
+      "aliases": [
+        "Ruihong Qiu"
+      ],
+      "extraction_methods": [
+        "structural_metadata"
+      ],
+      "judges": [
+        "structural_metadata_rule"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_e12fac0a4af059f879ba",
+          "quote": "Mudi Zhai, Qingyun Zeng, Ruihong Qiu, Jiaying Li, Qixiang Zhu, T. David Waite, Bing-Jie Ni,,Haoran Duan",
+          "span": "",
+          "pages": [],
+          "sentence_id": "metadata-sentence_b81787f254b3ec961dc7",
+          "section_title": "",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_372efc5046d6ba626769",
+      "canonical_name": "Policymakers",
+      "node_type": "Policy",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_1efa2eceb0b3"
+      ],
+      "aliases": [
+        "Policymakers"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_9a175e88c07f3c546b2a",
+          "quote": "Policymakers require the transparent collection of real GHG emission data and operational data to support GHG inventories and net-zero roadmaps.",
+          "span": "Policymakers",
+          "pages": [
+            7,
+            8
+          ],
+          "sentence_id": "sent_1efa2eceb0b3",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_f9edced3562866622a3a",
+      "canonical_name": "11 engineering references",
+      "node_type": "Publication",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_00b23eac0f2e"
+      ],
+      "aliases": [
+        "11 engineering references"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_7a13f820fbc273203291",
+          "quote": "WaterRAG integrates a domain-specific knowledge base of 7637 selected peer-reviewed articles and 11 engineering references.",
+          "span": "11 engineering references",
+          "pages": [
+            2,
+            3
+          ],
+          "sentence_id": "sent_00b23eac0f2e",
+          "section_title": "INTRODUCTION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "publication_37bb659195fa2574ac7b",
+      "canonical_name": "WaterRAG: A Multiagent Retrieval-Augmented Generation Framework to Support Water Industry Transitions to Net-Zero",
+      "node_type": "Publication",
+      "mention_count": 1,
+      "sentence_ids": [
+        "metadata-sentence_adf13224d2c125c73b2c"
+      ],
+      "aliases": [
+        "WaterRAG: A Multiagent Retrieval-Augmented Generation Framework to Support Water Industry Transitions to Net-Zero"
+      ],
+      "extraction_methods": [
+        "structural_metadata"
+      ],
+      "judges": [
+        "structural_metadata_rule"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_76ea9512ea76358ef3cf",
+          "quote": "WaterRAG: A Multiagent Retrieval-Augmented Generation Framework to Support Water Industry Transitions to Net-Zero",
+          "span": "",
+          "pages": [],
+          "sentence_id": "metadata-sentence_adf13224d2c125c73b2c",
+          "section_title": "",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_c4149c5da0999571d6f8",
+      "canonical_name": "more comprehensive and relevant retrieved information",
+      "node_type": "ScientificConcept",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_b009800c705c"
+      ],
+      "aliases": [
+        "more comprehensive and relevant retrieved information"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_8b6caa13968d407080bf",
+          "quote": "This demonstrates that WaterRAG's knowledge base and retrieval mechanism can lead to more comprehensive and relevant retrieved information in the studied domain.",
+          "span": "more comprehensive and relevant retrieved information",
+          "pages": [
+            9,
+            10
+          ],
+          "sentence_id": "sent_b009800c705c",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_cc561979b21ca58bbe27",
+      "canonical_name": "Deepeval framework",
+      "node_type": "SoftwareArtifact",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_7c313479a5a7"
+      ],
+      "aliases": [
+        "Deepeval framework",
+        "the Deepeval framework"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_bdc5b4b0eb18bfbbac25",
+          "quote": "The LLM-as-a-Judge utilized the Deepeval framework to score these To validate the reliability of LLM-as-a-judge, a 10% random metrics.",
+          "span": "the Deepeval framework",
+          "pages": [
+            5
+          ],
+          "sentence_id": "sent_7c313479a5a7",
+          "section_title": "METHODS",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_7044c943477c67d425df",
+      "canonical_name": "open-source Llama3 − 8B model",
+      "node_type": "SoftwareArtifact",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_50e65d13a8ed"
+      ],
+      "aliases": [
+        "open-source Llama3 − 8B model",
+        "the open-source Llama3 − 8B model"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_5b6f62924eedb00fc39a",
+          "quote": "For example, Xu et al. employed prompt engineering methods and fine-tuned the open-source Llama3 − 8B model, developing a specialized model called WaterGPT.",
+          "span": "the open-source Llama3 − 8B model",
+          "pages": [
+            2
+          ],
+          "sentence_id": "sent_50e65d13a8ed",
+          "section_title": "INTRODUCTION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_065b1d4022b350ed78dd",
+      "canonical_name": "10 review tasks",
+      "node_type": "Task",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_e9dd7c0ec31b"
+      ],
+      "aliases": [
+        "10 review tasks"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_5c368854b064b3c163ff",
+          "quote": "To evaluate the capability of generating literature reviews, WaterRAG was assigned 10 review tasks.",
+          "span": "10 review tasks",
+          "pages": [
+            8,
+            9
+          ],
+          "sentence_id": "sent_e9dd7c0ec31b",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_31701640314d4df41f44",
+      "canonical_name": "fine-tuning techniques",
+      "node_type": "Technology",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_fcb8005cb33f"
+      ],
+      "aliases": [
+        "fine-tuning techniques"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_e62b53df9dc0fa03969b",
+          "quote": "To improve the question answering (QA) ability of LLMs in the wastewater treatment domain, 17,19 recent studies have applied fine-tuning techniques.",
+          "span": "fine-tuning techniques",
+          "pages": [
+            2
+          ],
+          "sentence_id": "sent_fcb8005cb33f",
+          "section_title": "INTRODUCTION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_c443343c89a72a82751f",
+      "canonical_name": "Llama-3.1 − 8B",
+      "node_type": "Tool",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_e91e84850d6a"
+      ],
+      "aliases": [
+        "Llama-3.1 − 8B",
+        "the standalone Llama-3.1 − 8B"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_0f8e15efdfcc7e4c6023",
+          "quote": "WaterRAG (64.12%) elevates the standalone Llama-3.1 − 8B (38.79%) correctness pass rate exceeding the standalone GPT-4o (57.82%) and approaching the standalone GPT-4.1 (64.91%).",
+          "span": "the standalone Llama-3.1 − 8B",
+          "pages": [
+            6
+          ],
+          "sentence_id": "sent_e91e84850d6a",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_777f6a979609058c2bc9",
+      "canonical_name": "structured decision-support tool",
+      "node_type": "Tool",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_b508075d9499"
+      ],
+      "aliases": [
+        "a structured decision-support tool",
+        "structured decision-support tool"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_79c6aec1e76554ecb71f",
+          "quote": "WaterRAG provides a structured decision-support tool that improves evidence grounding beyond standalone general-purpose models.",
+          "span": "a structured decision-support tool",
+          "pages": [
+            11
+          ],
+          "sentence_id": "sent_b508075d9499",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "process_activated_sludge",
+      "canonical_name": "activated sludge process",
+      "node_type": "TreatmentProcess",
+      "mention_count": 2,
+      "sentence_ids": [
+        "sent_6914768eb9bf"
+      ],
+      "aliases": [
+        "activated sludge",
+        "activated sludge process"
+      ],
+      "extraction_methods": [
+        "persistent_lexicon"
+      ],
+      "judges": [
+        "persistent_lexicon_exact_match"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_f9b0179615a9df435526",
+          "quote": "In Question 4, when asked about the drawbacks of setting the internal aerobic-toanoxic mixed liquor recycle (a-recycle) above or below its optimum ratio (aopt) in biological nutrient removal (BNR), Llama-3.1 − 8B incorrectly interpreted the optimum internal recycle ratio as the ratio of the return activated sludge (RAS) flow rate to the waste activated sludge (WAS) flow rate.",
+          "span": "activated sludge",
+          "pages": [
+            6
+          ],
+          "sentence_id": "sent_6914768eb9bf",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        },
+        {
+          "mention_id": "mention_e7b5306316c35efa04ae",
+          "quote": "In Question 4, when asked about the drawbacks of setting the internal aerobic-toanoxic mixed liquor recycle (a-recycle) above or below its optimum ratio (aopt) in biological nutrient removal (BNR), Llama-3.1 − 8B incorrectly interpreted the optimum internal recycle ratio as the ratio of the return activated sludge (RAS) flow rate to the waste activated sludge (WAS) flow rate.",
+          "span": "activated sludge",
+          "pages": [
+            6
+          ],
+          "sentence_id": "sent_6914768eb9bf",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "process_chlorination",
+      "canonical_name": "chlorination",
+      "node_type": "TreatmentProcess",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_3c173676ea1f"
+      ],
+      "aliases": [
+        "chlorination"
+      ],
+      "extraction_methods": [
+        "persistent_lexicon"
+      ],
+      "judges": [
+        "persistent_lexicon_exact_match"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_7e5c1ed1d6616bc3a9c5",
+          "quote": "For example, in Question 3, when asked about safe operating procedures for chlorination in wastewater treatment, standalone LLMs consistently selected incorrect options contrary to safety regulations.",
+          "span": "chlorination",
+          "pages": [
+            6
+          ],
+          "sentence_id": "sent_3c173676ea1f",
+          "section_title": "RESULTS AND DISCUSSION",
+          "reference_resolution": null
+        }
+      ]
+    },
+    {
+      "entity_id": "entity_3eb387056fad033962ff",
+      "canonical_name": "domain-specific wastewater treatment tasks",
+      "node_type": "WaterSystem",
+      "mention_count": 1,
+      "sentence_ids": [
+        "sent_1942effe2117"
+      ],
+      "aliases": [
+        "domain-specific wastewater treatment tasks"
+      ],
+      "extraction_methods": [
+        "llm_judged_candidate"
+      ],
+      "judges": [
+        "structured_llm_node_judge"
+      ],
+      "evidence": [
+        {
+          "mention_id": "mention_481e91749f36cfe0d2dd",
+          "quote": "The performance of standalone LLMs, Naive RAG systems, and the proposed WaterRAG framework was systematically evaluated in domain-specific wastewater treatment tasks.",
+          "span": "domain-specific wastewater treatment tasks",
+          "pages": [
+            2,
+            3
+          ],
+          "sentence_id": "sent_1942effe2117",
+          "section_title": "INTRODUCTION",
+          "reference_resolution": null
+        }
+      ]
+    }
+  ]
+}
