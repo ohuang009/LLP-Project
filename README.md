@@ -8,6 +8,10 @@ generated audit boundary, and local Neo4j runtime.
 The complete dependency, local-model, configuration, and operating guide is
 [`Pipeline/README.md`](Pipeline/README.md).
 
+For a Windows-first, step-by-step operating runbook covering the website, direct pipeline runs,
+Neo4j startup, and graph viewing, use
+[`STANDARD_OPERATING_PROCEDURE.md`](STANDARD_OPERATING_PROCEDURE.md).
+
 Quick sequence after following that setup guide and starting the configured Neo4j instance:
 
 ```bash
