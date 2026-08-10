@@ -63,6 +63,7 @@ class Line:
 
 
 def _inside_bbox(word: dict, bbox: tuple[float, float, float, float]) -> bool:
+    """Handle inside bbox for this stage. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     cx = (float(word["x0"]) + float(word["x1"])) / 2
     cy = (float(word["top"]) + float(word["bottom"])) / 2
     x0, top, x1, bottom = bbox
@@ -70,6 +71,7 @@ def _inside_bbox(word: dict, bbox: tuple[float, float, float, float]) -> bool:
 
 
 def _words_to_lines(words: list[dict], page_number: int) -> list[Line]:
+    """Handle words to lines for this stage. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     groups: list[list[dict]] = []
     for word in sorted(words, key=lambda w: (round(float(w["top"]), 1), float(w["x0"]))):
         center = (float(word["top"]) + float(word["bottom"])) / 2
@@ -116,6 +118,7 @@ def _words_to_lines(words: list[dict], page_number: int) -> list[Line]:
 
 
 def _reading_order(lines: list[Line], width: float) -> list[Line]:
+    """Handle reading order for this stage. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     left = [line for line in lines if line.x1 < width * 0.56]
     right = [line for line in lines if line.x0 > width * 0.44]
     if len(left) + len(right) < len(lines) * 0.58 or min(len(left), len(right)) < 4:
@@ -134,6 +137,7 @@ def _reading_order(lines: list[Line], width: float) -> list[Line]:
 
 
 def extract_lines(pdf_bytes: bytes) -> tuple[list[Line], dict]:
+    """Extract lines. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     try:
         import pdfplumber
     except ImportError as exc:

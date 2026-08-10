@@ -5,7 +5,7 @@ import json
 import re
 from urllib import error, request
 
-from Pipeline.Node_Pipeline.common import ONTOLOGY_PATH, SCOPED_LABELS, json_read, jsonl_read, now_iso, stable_id
+from Pipeline.core import ONTOLOGY_PATH, SCOPED_LABELS, json_read, jsonl_read, now_iso, stable_id
 
 
 NEO4J_COMMIT_URL = "http://127.0.0.1:7477/db/neo4j/tx/commit"
@@ -15,6 +15,7 @@ EMBEDDED_PROVENANCE_CLASSES = {"Mention", "EvidenceFragment"}
 
 
 def _post(statements: list[dict], *, timeout: int = 45) -> dict:
+    """Handle post for this stage. It helps persist validated nodes, evidence, and relationships in Neo4j."""
     payload = json.dumps({"statements": statements}, ensure_ascii=False).encode("utf-8")
     call = request.Request(
         NEO4J_COMMIT_URL,
@@ -37,83 +38,8 @@ def _post(statements: list[dict], *, timeout: int = 45) -> dict:
 
 
 def _statement(source: str, rows: list[dict] | None = None) -> dict:
+    """Handle statement for this stage. It helps persist validated nodes, evidence, and relationships in Neo4j."""
     return {"statement": source, "parameters": {"rows": rows or []}}
-
-
-def ensure_ontology_foundation() -> dict:
-    """Idempotently materialize the authoritative ontology before instance data."""
-    ontology = json_read(ONTOLOGY_PATH)
-    class_rows = [
-        {
-            "id": class_id,
-            "name": class_id,
-            "category": spec.get("category", ""),
-            "status": spec.get("status", ""),
-            "definition": spec.get("definition", ""),
-            "properties_json": json.dumps(spec.get("properties", []), ensure_ascii=False),
-            "identity_strategy": spec.get("identity_strategy", ""),
-            "example": spec.get("example", ""),
-        }
-        for class_id, spec in ontology["nodes"].items()
-    ]
-    _post([
-        _statement("CREATE CONSTRAINT ontology_class_id IF NOT EXISTS FOR (n:OntologyClass) REQUIRE n.id IS UNIQUE"),
-        _statement("CREATE INDEX ontology_class_category IF NOT EXISTS FOR (n:OntologyClass) ON (n.category)"),
-    ])
-    _post([{
-        "statement": (
-            "UNWIND $rows AS row MERGE (c:OntologyClass {id:row.id}) "
-            "SET c.name=row.name, c.displayName=row.name, c.category=row.category, c.status=row.status, "
-            "c.definition=row.definition, c.propertiesJson=row.properties_json, "
-            "c.identityStrategy=row.identity_strategy, c.example=row.example, "
-            "c.sourceSheet='Nodes', c.ontologyVersion=$ontology_version"
-        ),
-        "parameters": {"rows": class_rows, "ontology_version": ontology.get("schema_version", "")},
-    }])
-
-    expected_edges = 0
-    schema_statements: list[dict] = []
-    for predicate, spec in ontology["relationships"].items():
-        if not SAFE_RELATIONSHIP.fullmatch(predicate):
-            raise ValueError(f"Unsafe ontology relationship type: {predicate}")
-        rows = [
-            {"source_id": source_id, "target_id": target_id}
-            for source_id in spec.get("domain", [])
-            for target_id in spec.get("range", [])
-        ]
-        expected_edges += len(rows)
-        schema_statements.append({
-            "statement": (
-                f"UNWIND $rows AS row MATCH (source:OntologyClass {{id:row.source_id}}), "
-                f"(target:OntologyClass {{id:row.target_id}}) MERGE (source)-[edge:{predicate}]->(target) "
-                "SET edge.schemaEdge=true, edge.sourceSheet='Edges', edge.category=$category, "
-                "edge.definition=$definition"
-            ),
-            "parameters": {
-                "rows": rows,
-                "category": spec.get("category", ""),
-                "definition": spec.get("definition", ""),
-            },
-        })
-    if schema_statements:
-        _post(schema_statements)
-
-    verification = _post([_statement(
-        "MATCH (c:OntologyClass) WITH count(c) AS classes "
-        "OPTIONAL MATCH (:OntologyClass)-[r]->(:OntologyClass) WHERE r.schemaEdge=true "
-        "RETURN classes,count(r) AS schemaEdges"
-    )])
-    values = verification["results"][0]["data"][0]["row"]
-    if values[0] != len(class_rows) or values[1] != expected_edges:
-        raise RuntimeError(
-            f"Ontology foundation verification failed: expected {len(class_rows)} classes/{expected_edges} edges, "
-            f"found {values[0]}/{values[1]}."
-        )
-    return {
-        "classes": values[0],
-        "schema_edges": values[1],
-        "relationship_types": len(ontology["relationships"]),
-    }
 
 
 def apply_ontology_labels(entity_rows: list[dict]) -> dict:
@@ -200,9 +126,6 @@ def build_entity_rows(run_id: str, document: dict, entities: list[dict], mention
         evidence_quotes: list[str] = []
         sections: list[str] = []
         page_refs: list[str] = []
-        resolution_statuses: list[str] = []
-        antecedent_sentence_ids: list[str] = []
-        antecedent_evidence_quotes: list[str] = []
         for mention_id in entity.get("mention_ids", []):
             if mention_id in claimed_mentions:
                 raise ValueError(f"Mention aggregation failed: {mention_id} belongs to more than one canonical node.")
@@ -215,7 +138,6 @@ def build_entity_rows(run_id: str, document: dict, entities: list[dict], mention
                 )
             claimed_mentions.add(mention_id)
             source = mention.get("source", {})
-            resolution = mention.get("reference_resolution") or {}
             context = source.get("context_sentences", [])
             source_kind = source.get("kind", "sentence_span" if source.get("sentence_id") else "")
             sentence_id = source.get("sentence_id") or (
@@ -248,12 +170,6 @@ def build_entity_rows(run_id: str, document: dict, entities: list[dict], mention
                 "context_sentences": context,
                 "extraction_method": mention.get("extraction_method", ""),
                 "attributes": mention.get("attributes", {}),
-                "reference_resolution": {
-                    "status": resolution.get("status", ""),
-                    "antecedent_sentence_id": resolution.get("antecedent_sentence_id", ""),
-                    "antecedent_evidence_quote": resolution.get("antecedent_evidence_quote", ""),
-                    "reason": resolution.get("reason", ""),
-                } if resolution else None,
             }
             records.append(json.dumps(record, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
             mention_ids.append(mention_id)
@@ -265,9 +181,6 @@ def build_entity_rows(run_id: str, document: dict, entities: list[dict], mention
             evidence_quotes.append(record["evidence_quote"])
             sections.append(record["section"])
             page_refs.append(", ".join(str(page) for page in record["pages"]))
-            resolution_statuses.append(record["reference_resolution"]["status"] if record["reference_resolution"] else "")
-            antecedent_sentence_ids.append(record["reference_resolution"]["antecedent_sentence_id"] if record["reference_resolution"] else "")
-            antecedent_evidence_quotes.append(record["reference_resolution"]["antecedent_evidence_quote"] if record["reference_resolution"] else "")
         rows.append({
             "id": entity["entity_id"],
             "label": entity["label"],
@@ -295,9 +208,6 @@ def build_entity_rows(run_id: str, document: dict, entities: list[dict], mention
             "mention_evidence_quotes": evidence_quotes,
             "mention_sections": sections,
             "mention_page_refs": page_refs,
-            "reference_resolution_statuses": resolution_statuses,
-            "antecedent_sentence_ids": antecedent_sentence_ids,
-            "antecedent_evidence_quotes": antecedent_evidence_quotes,
         })
     unclaimed = sorted(set(mention_index) - claimed_mentions)
     if unclaimed:
@@ -351,11 +261,6 @@ def graph_summary() -> dict:
             "sum(coalesce(e.groundedMentionCount,0)) AS groundedMentions"
         ),
         _statement(
-            "MATCH (e) WHERE e.nodeKind='ontology_entity' "
-            "RETURN sum(coalesce(e.resolvedMentionCount,0)) AS resolvedMentions, "
-            "sum(coalesce(e.antecedentTracedCount,0)) AS linkedAntecedents"
-        ),
-        _statement(
             "MATCH (a)-[r]->(b) WHERE a.nodeKind='ontology_entity' AND b.nodeKind='ontology_entity' "
             "RETURN count(r) AS semanticRelationships"
         ),
@@ -379,8 +284,7 @@ def graph_summary() -> dict:
     foundation = results[0]["data"][0]["row"] if results[0]["data"] else [0, 0]
     class_counts = [{"class": row["row"][0], "count": row["row"][1]} for row in results[1]["data"]]
     mention_counts = results[2]["data"][0]["row"] if results[2]["data"] else [0, 0]
-    resolution_counts = results[3]["data"][0]["row"] if results[3]["data"] else [0, 0]
-    latest = results[6]["data"][0]["row"] if results[6]["data"] else ["", ""]
+    latest = results[5]["data"][0]["row"] if results[5]["data"] else ["", ""]
     return {
         "ok": True,
         "ontology_classes": foundation[0],
@@ -390,12 +294,10 @@ def graph_summary() -> dict:
         "class_counts": class_counts,
         "mentions": mention_counts[0],
         "grounded_mentions": mention_counts[1],
-        "resolved_mentions": resolution_counts[0],
-        "linked_antecedents": resolution_counts[1],
-        "semantic_relationships": results[4]["data"][0]["row"][0],
-        "nodes_with_confidence": results[5]["data"][0]["row"][0],
-        "operational_instance_nodes": results[7]["data"][0]["row"][0],
-        "duplicate_canonical_keys": results[8]["data"][0]["row"][0],
+        "semantic_relationships": results[3]["data"][0]["row"][0],
+        "nodes_with_confidence": results[4]["data"][0]["row"][0],
+        "operational_instance_nodes": results[6]["data"][0]["row"][0],
+        "duplicate_canonical_keys": results[7]["data"][0]["row"][0],
         "latest_run": latest[0],
         "latest_run_completed_at": latest[1],
     }
@@ -441,332 +343,6 @@ def refresh_display_properties() -> None:
             "run.displayName=coalesce(run.sourceFilename,run.id)"
         ),
     ])
-
-
-def _legacy_upsert_run(run_dir, parsed: dict, entities: list[dict], relationships: list[dict]) -> dict:
-    """Idempotently add one extraction run and its evidence graph to local Neo4j."""
-    ontology_foundation = ensure_ontology_foundation()
-    relationship_validation = validate_relationships_against_ontology(entities, relationships)
-    mentions = jsonl_read(run_dir / "mentions.jsonl")
-    assertions = jsonl_read(run_dir / "assertions.jsonl")
-    run_id = run_dir.name
-    document = parsed["document"]
-    publication_entity = next(
-        (
-            row for row in entities
-            if row.get("label") == "Publication"
-            and row.get("canonical_name", "").casefold() == document.get("title", "").casefold()
-        ),
-        None,
-    )
-    document_node_id = publication_entity["entity_id"] if publication_entity else document["id"]
-    document_merge = (
-        "UNWIND $rows AS row MERGE (d:CanonicalEntity {id:row.id}) SET d:SourceDocument:Publication "
-        if publication_entity
-        else "UNWIND $rows AS row MERGE (d:SourceDocument:Publication {id:row.id}) "
-    )
-    mention_to_entity = {
-        mention_id: entity["entity_id"]
-        for entity in entities
-        for mention_id in entity.get("mention_ids", [])
-    }
-    entity_names = {entity["entity_id"]: entity.get("canonical_name", "") for entity in entities}
-
-    fragments: dict[str, dict] = {}
-    mention_rows = []
-    for mention in mentions:
-        source = mention.get("source", {})
-        sentence_id = source.get("sentence_id", "")
-        source_field = source.get("field", "")
-        source_locator = sentence_id or (f"metadata:{source_field}" if source_field else "")
-        fragment_id = stable_id("fragment", mention["document_id"], source_locator) if source_locator else ""
-        if fragment_id:
-            fragments[fragment_id] = {
-                "id": fragment_id,
-                "document_id": mention["document_id"],
-                "document_node_id": document_node_id,
-                "sentence_id": sentence_id,
-                "text": source.get("evidence_quote", ""),
-                "section": source.get("section_title", ""),
-                "pages": source.get("pages", []),
-                "fragment_type": "sentence" if sentence_id else "document_metadata",
-                "source_field": source_field,
-                "context_sentence_ids": source.get("context_sentence_ids", []),
-                "context_quotes": [row.get("text", "") for row in source.get("context_sentences", [])],
-                "context_policy": source.get("context_policy", ""),
-            }
-        resolution = mention.get("reference_resolution", {})
-        mention_rows.append({
-            "id": mention["mention_id"],
-            "run_id": run_id,
-            "document_id": mention["document_id"],
-            "fragment_id": fragment_id,
-            "entity_id": mention_to_entity.get(mention["mention_id"], ""),
-            "label": mention["label"],
-            "surface_text": mention.get("surface_text", ""),
-            "canonical_name": entity_names.get(mention_to_entity.get(mention["mention_id"], ""), mention.get("canonical_name", "")),
-            "method": mention.get("extraction_method", ""),
-            "start_char": source.get("start_char"),
-            "end_char": source.get("end_char"),
-            "source_kind": source.get("kind", ""),
-            "source_field": source_field,
-            "section": source.get("section_title", ""),
-            "pages": source.get("pages", []),
-            "evidence_quote": source.get("evidence_quote", ""),
-            "context_sentence_ids": source.get("context_sentence_ids", []),
-            "context_quotes": [row.get("text", "") for row in source.get("context_sentences", [])],
-            "reference_status": resolution.get("status", ""),
-            "target_mention_id": resolution.get("target_mention_id", ""),
-            "antecedent_sentence_id": resolution.get("antecedent_sentence_id", ""),
-            "antecedent_evidence_quote": resolution.get("antecedent_evidence_quote", ""),
-            "resolution_reason": resolution.get("reason", ""),
-        })
-
-    entity_rows = [{
-        "id": row["entity_id"],
-        "label": row["label"],
-        "name": row.get("canonical_name", ""),
-        "display_name": row.get("canonical_name", ""),
-        "aliases": row.get("aliases", []),
-        "mention_count": int(row.get("mention_count", 0)),
-        "run_id": run_id,
-    } for row in entities]
-    assertion_rows = [{
-        "id": row["assertion_id"],
-        "run_id": run_id,
-        "document_id": row.get("document_id", document["id"]),
-        "predicate": row["predicate"],
-        "subject_mention_id": row["subject_mention_id"],
-        "object_mention_id": row["object_mention_id"],
-        "display_name": row["predicate"],
-        "evidence_quote": row.get("evidence_quote", ""),
-        "pages": row.get("pages", []),
-        "attribution": row.get("attribution", ""),
-    } for row in assertions]
-
-    base = [
-        _statement("CREATE CONSTRAINT extraction_run_id IF NOT EXISTS FOR (n:ExtractionRun) REQUIRE n.id IS UNIQUE"),
-        _statement("CREATE CONSTRAINT source_document_id IF NOT EXISTS FOR (n:SourceDocument) REQUIRE n.id IS UNIQUE"),
-        _statement("CREATE CONSTRAINT canonical_entity_id IF NOT EXISTS FOR (n:CanonicalEntity) REQUIRE n.id IS UNIQUE"),
-        _statement("CREATE CONSTRAINT extracted_mention_id IF NOT EXISTS FOR (n:ExtractedMention) REQUIRE n.id IS UNIQUE"),
-        _statement("CREATE CONSTRAINT evidence_fragment_id IF NOT EXISTS FOR (n:EvidenceFragment) REQUIRE n.id IS UNIQUE"),
-        _statement("CREATE CONSTRAINT extracted_assertion_id IF NOT EXISTS FOR (n:ExtractedAssertion) REQUIRE n.id IS UNIQUE"),
-        _statement(
-            "UNWIND $rows AS row MERGE (run:ExtractionRun {id:row.id}) "
-            "ON CREATE SET run.createdAt=row.created_at "
-            "SET run.status='complete', run.completedAt=row.completed_at, "
-            "run.pipeline='nodes_and_predicates_v1', run.sourceFilename=row.source_filename, "
-            "run.name=row.source_filename, run.displayName=row.source_filename",
-            [{"id": run_id, "created_at": now_iso(), "completed_at": now_iso(), "source_filename": document.get("filename", "")}],
-        ),
-        _statement(
-            document_merge +
-            "SET d.title=row.title, d.name=coalesce(row.title,row.filename), d.displayName=coalesce(row.title,row.filename), "
-            "d.documentId=row.document_id, d.filename=row.filename, d.authorsText=row.authors_text, d.updatedAt=row.updated_at "
-            "WITH d,row MATCH (run:ExtractionRun {id:row.run_id}) MERGE (run)-[:PROCESSED_DOCUMENT]->(d)",
-            [{
-                "id": document_node_id, "document_id": document["id"], "title": document.get("title", ""),
-                "filename": document.get("filename", ""), "authors_text": document.get("authors_text", ""),
-                "updated_at": now_iso(), "run_id": run_id,
-            }],
-        ),
-        _statement(
-            "UNWIND $rows AS row MERGE (f:EvidenceFragment {id:row.id}) "
-            "SET f.sentenceId=row.sentence_id, f.text=row.text, f.name=left(replace(row.text,'\\n',' '),120), "
-            "f.displayName=left(replace(row.text,'\\n',' '),120), f.section=row.section, f.pages=row.pages, "
-            "f.fragmentType=row.fragment_type, f.sourceField=row.source_field, "
-            "f.contextSentenceIds=row.context_sentence_ids, f.contextQuotes=row.context_quotes, f.contextPolicy=row.context_policy "
-            "WITH f,row MATCH (d:SourceDocument {id:row.document_node_id}) MERGE (d)-[:CONTAINS_FRAGMENT]->(f)",
-            list(fragments.values()),
-        ),
-        _statement(
-            "UNWIND $rows AS row MERGE (e:CanonicalEntity {id:row.id}) "
-            "SET e.name=row.name, e.canonicalName=row.name, e.ontologyClass=row.label, e.aliases=row.aliases, "
-            "e.displayName=row.display_name, e.mentionCount=row.mention_count, e.updatedAt=datetime() "
-            "WITH e,row MATCH (run:ExtractionRun {id:row.run_id}) MERGE (run)-[:MATERIALIZED_ENTITY]->(e)",
-            entity_rows,
-        ),
-        _statement(
-            "UNWIND $rows AS row MERGE (m:ExtractedMention:Mention {id:row.id}) "
-            "SET m.surfaceText=row.surface_text, m.name=row.surface_text, m.displayName=row.surface_text, "
-            "m.canonicalName=row.canonical_name, m.ontologyClass=row.label, "
-            "m.extractionMethod=row.method, m.startChar=row.start_char, m.endChar=row.end_char, "
-            "m.sourceKind=row.source_kind, m.sourceField=row.source_field, m.section=row.section, m.pages=row.pages, "
-            "m.evidenceQuote=row.evidence_quote, m.contextSentenceIds=row.context_sentence_ids, m.contextQuotes=row.context_quotes, "
-            "m.referenceResolutionStatus=row.reference_status, m.antecedentSentenceId=row.antecedent_sentence_id, "
-            "m.antecedentEvidenceQuote=row.antecedent_evidence_quote, m.resolutionReason=row.resolution_reason "
-            "REMOVE m.confidence "
-            "WITH m,row MATCH (run:ExtractionRun {id:row.run_id}) MERGE (run)-[:EXTRACTED_MENTION]->(m) "
-            "FOREACH (_ IN CASE WHEN row.fragment_id='' THEN [] ELSE [1] END | MERGE (f:EvidenceFragment {id:row.fragment_id}) MERGE (f)-[:CONTAINS_MENTION]->(m)) "
-            "FOREACH (_ IN CASE WHEN row.entity_id='' THEN [] ELSE [1] END | MERGE (e:CanonicalEntity {id:row.entity_id}) MERGE (m)-[:REFERS_TO]->(e))",
-            mention_rows,
-        ),
-        _statement(
-            "UNWIND $rows AS row MERGE (a:ExtractedAssertion {id:row.id}) "
-            "SET a.predicate=row.predicate, a.name=row.display_name, a.displayName=row.display_name, a.evidenceQuote=row.evidence_quote, "
-            "a.pages=row.pages, a.attribution=row.attribution "
-            "REMOVE a.confidence "
-            "WITH a,row MATCH (run:ExtractionRun {id:row.run_id}) MERGE (run)-[:EXTRACTED_ASSERTION]->(a) "
-            "WITH a,row MATCH (s:ExtractedMention {id:row.subject_mention_id}), (o:ExtractedMention {id:row.object_mention_id}) "
-            "MERGE (a)-[:ASSERTION_SUBJECT]->(s) MERGE (a)-[:ASSERTION_OBJECT]->(o)",
-            assertion_rows,
-        ),
-    ]
-    # Neo4j does not allow schema and data changes in the same transaction.
-    _post(base[:6])
-    if publication_entity:
-        _post([{
-            "statement": (
-                "MATCH (duplicate:SourceDocument {id:$publication_id}) WHERE NOT duplicate:CanonicalEntity "
-                "MATCH (canonical:CanonicalEntity {id:$publication_id}) "
-                "OPTIONAL MATCH (run:ExtractionRun)-[:PROCESSED_DOCUMENT]->(duplicate) "
-                "FOREACH (_ IN CASE WHEN run IS NULL THEN [] ELSE [1] END | MERGE (run)-[:PROCESSED_DOCUMENT]->(canonical))"
-            ),
-            "parameters": {"publication_id": document_node_id},
-        }, {
-            "statement": (
-                "MATCH (duplicate:SourceDocument {id:$publication_id}) WHERE NOT duplicate:CanonicalEntity "
-                "MATCH (canonical:CanonicalEntity {id:$publication_id}) "
-                "OPTIONAL MATCH (duplicate)-[:CONTAINS_FRAGMENT]->(fragment:EvidenceFragment) "
-                "FOREACH (_ IN CASE WHEN fragment IS NULL THEN [] ELSE [1] END | MERGE (canonical)-[:CONTAINS_FRAGMENT]->(fragment))"
-            ),
-            "parameters": {"publication_id": document_node_id},
-        }, {
-            "statement": (
-                "MATCH (duplicate:SourceDocument {id:$publication_id}) WHERE NOT duplicate:CanonicalEntity "
-                "DETACH DELETE duplicate"
-            ),
-            "parameters": {"publication_id": document_node_id},
-        }])
-    _post([{
-        "statement": "MATCH (run:ExtractionRun {id:$run_id}) OPTIONAL MATCH (run)-[a:MATERIALIZED_ENTITY]->() DELETE a "
-                     "WITH run OPTIONAL MATCH (run)-[:EXTRACTED_MENTION]->(m)-[r:REFERS_TO]->() DELETE r "
-                     "WITH run OPTIONAL MATCH ()-[semantic]->() WHERE semantic.runId=$run_id DELETE semantic",
-        "parameters": {"run_id": run_id},
-    }])
-    _post(base[6:])
-    if document_node_id != document["id"]:
-        _post([{
-            "statement": (
-                "MATCH (legacy:SourceDocument {id:$legacy_id}), (publication:SourceDocument {id:$publication_id}) "
-                "OPTIONAL MATCH (run:ExtractionRun)-[:PROCESSED_DOCUMENT]->(legacy) "
-                "FOREACH (_ IN CASE WHEN run IS NULL THEN [] ELSE [1] END | MERGE (run)-[:PROCESSED_DOCUMENT]->(publication))"
-            ),
-            "parameters": {"legacy_id": document["id"], "publication_id": document_node_id},
-        }, {
-            "statement": (
-                "MATCH (legacy:SourceDocument {id:$legacy_id}), (publication:SourceDocument {id:$publication_id}) "
-                "OPTIONAL MATCH (legacy)-[:CONTAINS_FRAGMENT]->(fragment:EvidenceFragment) "
-                "FOREACH (_ IN CASE WHEN fragment IS NULL THEN [] ELSE [1] END | MERGE (publication)-[:CONTAINS_FRAGMENT]->(fragment))"
-            ),
-            "parameters": {"legacy_id": document["id"], "publication_id": document_node_id},
-        }, {
-            "statement": "MATCH (legacy:SourceDocument {id:$legacy_id}) DETACH DELETE legacy",
-            "parameters": {"legacy_id": document["id"]},
-        }])
-    _post([_statement(
-        "UNWIND $rows AS row MATCH (reference:ExtractedMention {id:row.id}) "
-        "OPTIONAL MATCH (reference)-[old:RESOLVED_TO_MENTION]->() DELETE old "
-        "WITH reference,row WHERE row.target_mention_id<>'' "
-        "MATCH (antecedent:ExtractedMention {id:row.target_mention_id}) "
-        "MERGE (reference)-[r:RESOLVED_TO_MENTION]->(antecedent) "
-        "SET r.status=row.reference_status, r.antecedentSentenceId=row.antecedent_sentence_id",
-        mention_rows,
-    )])
-    ontology_labels = apply_ontology_labels(entity_rows)
-    reconcile_instance_types()
-
-    by_predicate: dict[str, list[dict]] = defaultdict(list)
-    assertion_by_id = {row["assertion_id"]: row for row in assertions}
-    for relationship in relationships:
-        predicate = relationship["predicate"]
-        if not SAFE_RELATIONSHIP.fullmatch(predicate):
-            raise ValueError(f"Unsafe Neo4j relationship type: {predicate}")
-        evidence = [assertion_by_id[item] for item in relationship.get("assertion_ids", []) if item in assertion_by_id]
-        by_predicate[predicate].append({
-            "id": relationship["relationship_id"],
-            "subject_id": relationship["subject_entity_id"],
-            "object_id": relationship["object_entity_id"],
-            "support_count": int(relationship.get("support_count", len(evidence))),
-            "assertion_ids": relationship.get("assertion_ids", []),
-            "run_id": run_id,
-            "evidence_quotes": [row.get("evidence_quote") or "" for row in evidence[:10]],
-            "evidence_sentence_ids": [(row.get("evidence_sentence_ids") or [""])[0] for row in evidence[:10]],
-            "evidence_sections": [row.get("section_id") or "" for row in evidence[:10]],
-            "evidence_page_refs": [", ".join(str(page) for page in row.get("pages", [])) for row in evidence[:10]],
-            "trigger_texts": [row.get("predicate_text", "") or "" for row in evidence[:10]],
-        })
-    for predicate, rows in by_predicate.items():
-        _post([_statement(
-            f"UNWIND $rows AS row MATCH (s:CanonicalEntity {{id:row.subject_id}}), (o:CanonicalEntity {{id:row.object_id}}) "
-            f"MERGE (s)-[r:{predicate} {{relationshipId:row.id}}]->(o) "
-            "SET r.supportCount=row.support_count, r.assertionIds=row.assertion_ids, r.runId=row.run_id, r.evidenceQuotes=row.evidence_quotes",
-            rows,
-        )])
-
-    refresh_display_properties()
-
-    verification = _post([{
-        "statement": "MATCH (run:ExtractionRun {id:$run_id}) OPTIONAL MATCH (run)-[:MATERIALIZED_ENTITY]->(e:CanonicalEntity) "
-                     "WITH run,count(DISTINCT e) AS entities OPTIONAL MATCH (run)-[:EXTRACTED_MENTION]->(m:ExtractedMention) "
-                     "WITH run,entities,count(DISTINCT m) AS mentions OPTIONAL MATCH (run)-[:EXTRACTED_ASSERTION]->(a:ExtractedAssertion) "
-                     "RETURN entities,mentions,count(DISTINCT a) AS assertions",
-        "parameters": {"run_id": run_id},
-    }])
-    values = verification["results"][0]["data"][0]["row"]
-    alignment = _post([_statement(
-        "MATCH (run:ExtractionRun {id:$run_id})-[:MATERIALIZED_ENTITY]->(e:CanonicalEntity) "
-        "OPTIONAL MATCH (e)-[:INSTANCE_OF]->(c:OntologyClass) "
-        "RETURN count(DISTINCT e),count(DISTINCT CASE WHEN c IS NOT NULL THEN e END)",
-    ) | {"parameters": {"run_id": run_id}}])
-    alignment_values = alignment["results"][0]["data"][0]["row"]
-    if alignment_values[0] != alignment_values[1]:
-        raise RuntimeError(
-            f"Neo4j ontology alignment failed: {alignment_values[0]} entities but {alignment_values[1]} typed classes."
-        )
-    traceability = _post([{
-        "statement": (
-            "MATCH (run:ExtractionRun {id:$run_id})-[:EXTRACTED_MENTION]->(m:ExtractedMention) "
-            "OPTIONAL MATCH (f:EvidenceFragment)-[:CONTAINS_MENTION]->(m) "
-            "WITH run,count(DISTINCT m) AS mentions, "
-            "count(DISTINCT CASE WHEN f IS NOT NULL AND f.text=m.evidenceQuote THEN m END) AS groundedMentions, "
-            "count(DISTINCT CASE WHEN coalesce(m.referenceResolutionStatus,'')<>'' THEN m END) AS resolvedMentions "
-            "OPTIONAL MATCH (run)-[:EXTRACTED_MENTION]->(resolved:ExtractedMention)-[:RESOLVED_TO_MENTION]->(:ExtractedMention) "
-            "RETURN mentions,groundedMentions,resolvedMentions,count(DISTINCT resolved) AS resolvedWithAntecedent"
-        ),
-        "parameters": {"run_id": run_id},
-    }])
-    trace_values = traceability["results"][0]["data"][0]["row"]
-    if trace_values[0] != trace_values[1] or trace_values[2] != trace_values[3]:
-        raise RuntimeError(
-            "Neo4j traceability verification failed: every mention must have exact evidence, and every "
-            "resolved vague mention must link to its antecedent mention."
-        )
-    return {
-        "status": "upserted",
-        "database": "neo4j",
-        "http_endpoint": "http://localhost:7477/",
-        "browser": "http://localhost:8767/neo4j-browser/?connectURL=bolt%3A%2F%2Flocalhost%3A7690&db=neo4j",
-        "run_id": run_id,
-        "document_id": document["id"],
-        "entities": values[0],
-        "mentions": values[1],
-        "assertions": values[2],
-        "relationships": len(relationships),
-        "ontology_foundation": ontology_foundation,
-        "ontology_alignment": {
-            "canonical_entities": alignment_values[0],
-            "typed_entities": alignment_values[1],
-        },
-        "ontology_labels": ontology_labels,
-        "relationship_validation": relationship_validation,
-        "traceability": {
-            "mentions": trace_values[0],
-            "mentions_with_exact_evidence": trace_values[1],
-            "resolved_mentions": trace_values[2],
-            "resolved_mentions_with_antecedent": trace_values[3],
-        },
-    }
 
 
 def align_reusable_entity_ids(
@@ -863,7 +439,8 @@ def upsert_run(run_dir, parsed: dict, entities: list[dict], relationships: list[
             "AND NOT e.id IN $current_entity_ids "
             "AND any(source IN coalesce(e.sourceDocumentIds,[]) WHERE source<>$document_id) "
             "WITH e,[i IN range(0,size(coalesce(e.mentionDocumentIds,[]))-1) "
-            "WHERE e.mentionDocumentIds[i]<>$document_id] AS keep "
+            "WHERE e.mentionDocumentIds[i]<>$document_id] AS keep, "
+            "e.latestDocumentId=$document_id AS removingLatest "
             "SET e.mentions=[i IN keep | e.mentions[i]], "
             "e.mentionIds=[i IN keep | e.mentionIds[i]], "
             "e.mentionDocumentIds=[i IN keep | e.mentionDocumentIds[i]], "
@@ -873,15 +450,10 @@ def upsert_run(run_dir, parsed: dict, entities: list[dict], relationships: list[
             "e.mentionSentenceIds=[i IN keep | e.mentionSentenceIds[i]], "
             "e.mentionEvidenceQuotes=[i IN keep | e.mentionEvidenceQuotes[i]], "
             "e.mentionSections=[i IN keep | e.mentionSections[i]], "
-            "e.mentionPageRefs=[i IN keep | e.mentionPageRefs[i]], "
-            "e.referenceResolutionStatuses=[i IN keep | e.referenceResolutionStatuses[i]], "
-            "e.antecedentSentenceIds=[i IN keep | e.antecedentSentenceIds[i]], "
-            "e.antecedentEvidenceQuotes=[i IN keep | e.antecedentEvidenceQuotes[i]] "
+            "e.mentionPageRefs=[i IN keep | e.mentionPageRefs[i]] "
             "WITH e "
             "SET e.mentionCount=size(e.mentions), "
             "e.groundedMentionCount=size([quote IN e.mentionEvidenceQuotes WHERE trim(quote)<>'' ]), "
-            "e.resolvedMentionCount=size([status IN e.referenceResolutionStatuses WHERE trim(status)<>'' ]), "
-            "e.antecedentTracedCount=size([sentence IN e.antecedentSentenceIds WHERE trim(sentence)<>'' ]), "
             "e.surfaceForms=reduce(acc=[],x IN e.mentionSurfaceTexts | CASE WHEN x IN acc THEN acc ELSE acc+x END), "
             "e.sourceDocumentIds=reduce(acc=[],x IN e.mentionDocumentIds | CASE WHEN x IN acc THEN acc ELSE acc+x END)"
         ),
@@ -927,9 +499,6 @@ def upsert_run(run_dir, parsed: dict, entities: list[dict], relationships: list[
             "e.mentionEvidenceQuotes=[i IN keep | e.mentionEvidenceQuotes[i]]+row.mention_evidence_quotes, "
             "e.mentionSections=[i IN keep | e.mentionSections[i]]+row.mention_sections, "
             "e.mentionPageRefs=[i IN keep | e.mentionPageRefs[i]]+row.mention_page_refs, "
-            "e.referenceResolutionStatuses=[i IN keep | e.referenceResolutionStatuses[i]]+row.reference_resolution_statuses, "
-            "e.antecedentSentenceIds=[i IN keep | e.antecedentSentenceIds[i]]+row.antecedent_sentence_ids, "
-            "e.antecedentEvidenceQuotes=[i IN keep | e.antecedentEvidenceQuotes[i]]+row.antecedent_evidence_quotes, "
             "e.latestRunId=row.run_id,e.latestRunCompletedAt=row.run_completed_at,e.latestDocumentId=row.document_id, "
             "e.latestDocumentMentionCount=size(row.mentions),e.updatedAt=datetime() "
             "FOREACH (_ IN CASE WHEN row.label='Publication' THEN [1] ELSE [] END | "
@@ -937,13 +506,9 @@ def upsert_run(run_dir, parsed: dict, entities: list[dict], relationships: list[
             "WITH e,row "
             "SET e.mentionCount=size(e.mentions), "
             "e.groundedMentionCount=size([quote IN e.mentionEvidenceQuotes WHERE trim(quote)<>'']), "
-            "e.resolvedMentionCount=size([status IN e.referenceResolutionStatuses WHERE trim(status)<>'']), "
-            "e.antecedentTracedCount=size([sentence IN e.antecedentSentenceIds WHERE trim(sentence)<>'']), "
             "e.surfaceForms=reduce(acc=[],x IN e.mentionSurfaceTexts | CASE WHEN x IN acc THEN acc ELSE acc+x END), "
             "e.sourceDocumentIds=reduce(acc=[],x IN e.mentionDocumentIds | CASE WHEN x IN acc THEN acc ELSE acc+x END), "
-            "e.latestDocumentGroundedMentionCount=size([quote IN row.mention_evidence_quotes WHERE trim(quote)<>'']), "
-            "e.latestDocumentResolvedMentionCount=size([status IN row.reference_resolution_statuses WHERE trim(status)<>'']), "
-            "e.latestDocumentAntecedentTracedCount=size([sentence IN row.antecedent_sentence_ids WHERE trim(sentence)<>'']) "
+            "e.latestDocumentGroundedMentionCount=size([quote IN row.mention_evidence_quotes WHERE trim(quote)<>'']) "
             "REMOVE e.confidence, e.score"
         ),
         "parameters": {"rows": entity_rows},
@@ -1009,8 +574,7 @@ def upsert_run(run_dir, parsed: dict, entities: list[dict], relationships: list[
             "AND $document_id IN coalesce(e.sourceDocumentIds,[]) "
             "WITH count(DISTINCT e) AS entities,"
             "count(DISTINCT CASE WHEN size(labels(e))=1 AND labels(e)[0]=e.ontologyClass THEN e END) AS typedEntities, "
-            "sum(e.latestDocumentMentionCount) AS mentions,sum(e.latestDocumentGroundedMentionCount) AS grounded, "
-            "sum(e.latestDocumentResolvedMentionCount) AS resolved,sum(e.latestDocumentAntecedentTracedCount) AS traced "
+            "sum(e.latestDocumentMentionCount) AS mentions,sum(e.latestDocumentGroundedMentionCount) AS grounded "
             "CALL () { MATCH (schema:OntologyClass) RETURN count(schema) AS materializedOntologyNodes } "
             "CALL () { MATCH (n) WHERE n:ExtractedMention OR n:EvidenceFragment OR n:ExtractedAssertion OR "
             "n:ExtractionRun OR n:SourceDocument OR n:CanonicalEntity RETURN count(n) AS operationalNodes } "
@@ -1020,7 +584,7 @@ def upsert_run(run_dir, parsed: dict, entities: list[dict], relationships: list[
             "CALL () { MATCH (a)-[r]->(b) WHERE a.nodeKind='ontology_entity' AND b.nodeKind='ontology_entity' "
             "AND r.runId=$run_id RETURN count(r) AS semanticRelationships,"
             "count(CASE WHEN r.traceable=true AND size(coalesce(r.evidenceQuotes,[]))>0 THEN 1 END) AS traceableRelationships } "
-            "RETURN entities,typedEntities,mentions,grounded,resolved,traced,operationalNodes,duplicateCanonicalKeys,"
+            "RETURN entities,typedEntities,mentions,grounded,operationalNodes,duplicateCanonicalKeys,"
             "materializedOntologyNodes,semanticRelationships,traceableRelationships"
         ),
         "parameters": {
@@ -1034,17 +598,15 @@ def upsert_run(run_dir, parsed: dict, entities: list[dict], relationships: list[
         raise RuntimeError(f"Neo4j ontology alignment failed: expected {len(entities)} entities, found {values[0]}/{values[1]} typed.")
     if values[2] != len(mentions) or values[3] != len(mentions):
         raise RuntimeError(f"Neo4j mention aggregation failed: expected {len(mentions)} grounded mentions, found {values[2]}/{values[3]}.")
-    if values[4] != values[5]:
-        raise RuntimeError(f"Neo4j reference traceability failed: {values[4]} resolved mentions but {values[5]} antecedents.")
-    if values[6] or values[7] or values[8]:
+    if values[4] or values[5] or values[6]:
         raise RuntimeError(
-            f"Neo4j paper-only invariant failed: {values[6]} operational nodes, "
-            f"{values[7]} duplicate canonical keys, and {values[8]} materialized ontology nodes."
+            f"Neo4j paper-only invariant failed: {values[4]} operational nodes, "
+            f"{values[5]} duplicate canonical keys, and {values[6]} materialized ontology nodes."
         )
-    if values[9] != len(relationships) or values[10] != len(relationships):
+    if values[7] != len(relationships) or values[8] != len(relationships):
         raise RuntimeError(
             f"Neo4j relationship traceability failed: expected {len(relationships)}, "
-            f"found {values[9]} semantic and {values[10]} traceable relationships."
+            f"found {values[7]} semantic and {values[8]} traceable relationships."
         )
 
     return {
@@ -1052,19 +614,19 @@ def upsert_run(run_dir, parsed: dict, entities: list[dict], relationships: list[
         "database": "neo4j",
         "graph_model": "paper_semantic_graph_v3",
         "http_endpoint": "http://localhost:7477/",
-        "browser": "http://localhost:8767/neo4j-browser/?connectURL=bolt%3A%2F%2Flocalhost%3A7690&db=neo4j",
+        "browser": "http://127.0.0.1:7477/",
         "run_id": run_id,
         "document_id": document["id"],
         "entities": values[0],
         "mentions": values[2],
         "mention_nodes": 0,
         "evidence_fragment_nodes": 0,
-        "operational_instance_nodes": values[6],
-        "duplicate_canonical_keys": values[7],
+        "operational_instance_nodes": values[4],
+        "duplicate_canonical_keys": values[5],
         "assertions": len(assertions),
-        "relationships": values[9],
-        "traceable_relationships": values[10],
-        "materialized_ontology_nodes": values[8],
+        "relationships": values[7],
+        "traceable_relationships": values[8],
+        "materialized_ontology_nodes": values[6],
         "ontology_spec_used_for_validation": ontology_spec,
         "ontology_alignment": {"paper_entities": values[0], "correctly_labeled_entities": values[1]},
         "ontology_labels": ontology_labels,
@@ -1073,8 +635,140 @@ def upsert_run(run_dir, parsed: dict, entities: list[dict], relationships: list[
         "traceability": {
             "mentions": values[2],
             "mentions_with_exact_evidence": values[3],
-            "resolved_mentions": values[4],
-            "resolved_mentions_with_antecedent": values[5],
             "storage": "embedded JSON records on canonical ontology nodes",
         },
+    }
+
+
+def remove_document(document_id: str, run_id: str = "") -> dict:
+    """Remove one paper's graph contribution without deleting entities shared by other papers."""
+    if not document_id or not str(document_id).strip():
+        raise ValueError("A document ID is required to remove a paper from Neo4j.")
+
+    before = _post([{
+        "statement": (
+            "MATCH (e) WHERE e.nodeKind='ontology_entity' "
+            "AND $document_id IN coalesce(e.sourceDocumentIds,[]) "
+            "WITH count(DISTINCT e) AS entities "
+            "CALL () { MATCH (a)-[r]->(b) WHERE a.nodeKind='ontology_entity' "
+            "AND b.nodeKind='ontology_entity' AND r.documentId=$document_id "
+            "RETURN count(r) AS relationships } "
+            "RETURN entities,relationships"
+        ),
+        "parameters": {"document_id": document_id},
+    }])
+    values = before["results"][0]["data"][0]["row"] if before["results"][0]["data"] else [0, 0]
+
+    _post([{
+        "statement": (
+            "MATCH (a)-[r]->(b) WHERE a.nodeKind='ontology_entity' "
+            "AND b.nodeKind='ontology_entity' AND r.documentId=$document_id DELETE r"
+        ),
+        "parameters": {"document_id": document_id},
+    }])
+
+    # Shared canonical identities survive. Only the mention/evidence slices
+    # contributed by this document are removed from their embedded arrays.
+    _post([{
+        "statement": (
+            "MATCH (e) WHERE e.nodeKind='ontology_entity' "
+            "AND $document_id IN coalesce(e.sourceDocumentIds,[]) "
+            "AND any(source IN coalesce(e.sourceDocumentIds,[]) WHERE source<>$document_id) "
+            "WITH e,[i IN range(0,size(coalesce(e.mentionDocumentIds,[]))-1) "
+            "WHERE e.mentionDocumentIds[i]<>$document_id] AS keep, "
+            "e.latestDocumentId=$document_id AS removingLatest "
+            "SET e.mentions=[i IN keep | e.mentions[i]], "
+            "e.mentionIds=[i IN keep | e.mentionIds[i]], "
+            "e.mentionDocumentIds=[i IN keep | e.mentionDocumentIds[i]], "
+            "e.mentionSurfaceTexts=[i IN keep | e.mentionSurfaceTexts[i]], "
+            "e.mentionSourceKinds=[i IN keep | coalesce(e.mentionSourceKinds,[])[i]], "
+            "e.mentionSourceLocators=[i IN keep | coalesce(e.mentionSourceLocators,[])[i]], "
+            "e.mentionSentenceIds=[i IN keep | e.mentionSentenceIds[i]], "
+            "e.mentionEvidenceQuotes=[i IN keep | e.mentionEvidenceQuotes[i]], "
+            "e.mentionSections=[i IN keep | e.mentionSections[i]], "
+            "e.mentionPageRefs=[i IN keep | e.mentionPageRefs[i]] "
+            "WITH e,removingLatest SET e.mentionCount=size(e.mentions), "
+            "e.groundedMentionCount=size([quote IN e.mentionEvidenceQuotes WHERE trim(quote)<>'' ]), "
+            "e.surfaceForms=reduce(acc=[],x IN e.mentionSurfaceTexts | CASE WHEN x IN acc THEN acc ELSE acc+x END), "
+            "e.sourceDocumentIds=reduce(acc=[],x IN e.mentionDocumentIds | CASE WHEN x IN acc THEN acc ELSE acc+x END), "
+            "e.latestDocumentId=CASE WHEN removingLatest THEN "
+            "coalesce(e.mentionDocumentIds[-1],'') ELSE e.latestDocumentId END, "
+            "e.latestRunId=CASE WHEN removingLatest THEN '' ELSE e.latestRunId END, "
+            "e.updatedAt=datetime()"
+        ),
+        "parameters": {"document_id": document_id},
+    }])
+
+    # Nodes supported only by the removed paper have no remaining provenance
+    # and are therefore deleted with their remaining incident relationships.
+    _post([{
+        "statement": (
+            "MATCH (e) WHERE e.nodeKind='ontology_entity' "
+            "AND $document_id IN coalesce(e.sourceDocumentIds,[]) "
+            "AND all(source IN coalesce(e.sourceDocumentIds,[]) WHERE source=$document_id) "
+            "DETACH DELETE e"
+        ),
+        "parameters": {"document_id": document_id},
+    }])
+    refresh_display_properties()
+
+    verification = _post([{
+        "statement": (
+            "MATCH (e) WHERE e.nodeKind='ontology_entity' "
+            "AND $document_id IN coalesce(e.sourceDocumentIds,[]) "
+            "WITH count(e) AS entities "
+            "CALL () { MATCH (a)-[r]->(b) WHERE a.nodeKind='ontology_entity' "
+            "AND b.nodeKind='ontology_entity' AND r.documentId=$document_id "
+            "RETURN count(r) AS relationships } "
+            "RETURN entities,relationships"
+        ),
+        "parameters": {"document_id": document_id},
+    }])
+    remaining = verification["results"][0]["data"][0]["row"] if verification["results"][0]["data"] else [0, 0]
+    if remaining != [0, 0]:
+        raise RuntimeError(
+            f"Neo4j paper removal verification failed: {remaining[0]} entities and "
+            f"{remaining[1]} relationships still reference {document_id}."
+        )
+    return {
+        "status": "removed",
+        "database": "neo4j",
+        "run_id": run_id,
+        "document_id": document_id,
+        "entities_removed_or_detached": values[0],
+        "relationships_removed": values[1],
+        "browser": "http://127.0.0.1:7477/",
+    }
+
+
+def reset_graph() -> dict:
+    """Delete every node and relationship from the configured Neo4j database."""
+    before = _post([
+        _statement("MATCH (n) RETURN count(n) AS nodes"),
+        _statement("MATCH ()-[r]->() RETURN count(r) AS relationships"),
+    ])["results"]
+    nodes = before[0]["data"][0]["row"][0] if before[0]["data"] else 0
+    relationships = before[1]["data"][0]["row"][0] if before[1]["data"] else 0
+
+    _post([_statement("MATCH (n) DETACH DELETE n")])
+
+    after = _post([
+        _statement("MATCH (n) RETURN count(n) AS nodes"),
+        _statement("MATCH ()-[r]->() RETURN count(r) AS relationships"),
+    ])["results"]
+    remaining_nodes = after[0]["data"][0]["row"][0] if after[0]["data"] else 0
+    remaining_relationships = after[1]["data"][0]["row"][0] if after[1]["data"] else 0
+    if remaining_nodes or remaining_relationships:
+        raise RuntimeError(
+            "Neo4j reset verification failed: "
+            f"{remaining_nodes} nodes and {remaining_relationships} relationships remain."
+        )
+    return {
+        "status": "reset",
+        "database": "neo4j",
+        "nodes_removed": nodes,
+        "relationships_removed": relationships,
+        "nodes_remaining": remaining_nodes,
+        "relationships_remaining": remaining_relationships,
+        "browser": "http://127.0.0.1:7477/",
     }

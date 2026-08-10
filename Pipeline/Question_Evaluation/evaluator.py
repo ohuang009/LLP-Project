@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from pathlib import Path
 
-from Pipeline.Node_Pipeline.common import json_write
+from Pipeline.core import json_write
 
 
 QUESTION_SPECS = (
@@ -21,6 +21,7 @@ QUESTION_SPECS = (
 
 
 def _answer_rows(key: str, relationships: list[dict], entities: dict[str, dict]) -> list[str]:
+    """Collect human-readable answers supported by matching graph relationships."""
     rows: list[str] = []
     for relationship in relationships:
         source = entities.get(relationship["subject_entity_id"], {})

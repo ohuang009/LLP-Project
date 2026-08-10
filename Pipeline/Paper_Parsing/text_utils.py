@@ -33,6 +33,7 @@ LINE_END_HYPHENS = "-\u2010\u2011\u2012\u2013"
 
 
 def normalize_text(text: str) -> str:
+    """Normalize text. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     text = unicodedata.normalize("NFKC", text)
     text = text.replace("\u00ad", "")
     text = text.replace("\ufffd", "-")
@@ -54,6 +55,7 @@ def normalize_text(text: str) -> str:
 
 
 def join_lines(lines: list[str]) -> str:
+    """Join lines. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     result = ""
     for raw in lines:
         line = normalize_text(raw)
@@ -72,21 +74,25 @@ def join_lines(lines: list[str]) -> str:
 
 
 def has_terminal_punctuation(text: str) -> bool:
+    """Check whether terminal punctuation. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     clean = normalize_text(text)
     return bool(TERMINAL_RE.search(clean)) or clean.endswith((":", ";"))
 
 
 def starts_like_continuation(text: str) -> bool:
+    """Check whether continuation. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     clean = normalize_text(text)
     clean = re.sub(r"^[\"'\u201c\u2018(\[]+", "", clean)
     return bool(clean) and (clean[0].islower() or clean[0] in ",;:)]")
 
 
 def begins_list_item(text: str) -> bool:
+    """Check whether list item. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     return bool(LIST_ITEM_RE.match(normalize_text(text)))
 
 
 def split_sentences(text: str) -> list[str]:
+    """Split sentences. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     protected = text
     period_marker = "\ue000"
     for abbreviation in ABBREVIATIONS:
@@ -114,10 +120,12 @@ def split_sentences(text: str) -> list[str]:
 
 
 def looks_like_caption(text: str) -> bool:
+    """Check whether caption. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     return bool(CAPTION_RE.match(normalize_text(text)))
 
 
 def looks_like_formula(text: str) -> bool:
+    """Check whether formula. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     clean = normalize_text(text)
     symbol_ratio = sum(not c.isalnum() and not c.isspace() for c in clean) / max(len(clean), 1)
     return "cid:" in clean or bool(FORMULA_RE.match(clean)) or (symbol_ratio > 0.35 and len(clean) < 180)
@@ -126,6 +134,7 @@ def looks_like_formula(text: str) -> bool:
 def looks_like_heading(
     text: str, size: float, body_size: float, *, bold: bool = False, italic: bool = False
 ) -> bool:
+    """Check whether heading. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     clean = normalize_text(text)
     if not clean or len(clean) > 140 or clean.endswith((".", ";", ",")):
         return False

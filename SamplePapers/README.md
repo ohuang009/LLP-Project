@@ -1,7 +1,3 @@
 # Sample papers
 
-- PDF files at this folder's root are the workbench samples.
-- `evaluation/` contains the versioned refinement, testing, and held-out corpus plus its manifest.
-- `regression/` contains additional regression inputs used by the pipeline.
-
-Generated parsing or extraction artifacts must be written to `PipelineAudits/`, not beside source papers.
+`evaluation/` is the only paper corpus. It contains 15 papers split into refinement, testing, and held-out groups plus a checksum manifest. See `evaluation/README.md` for the split policy and verification command.

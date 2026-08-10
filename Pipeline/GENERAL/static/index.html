@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Engineered Water Systems | Extraction Pipeline</title>
-  <meta name="description" content="Visible node, predicate, and Neo4j extraction pipeline for engineered water systems research.">
+  <meta name="description" content="Review the people, systems, methods, and connections found in engineered water systems research.">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -14,36 +14,40 @@
       <span>Extraction Pipeline</span>
     </a>
     <div class="mast-actions">
-      <span class="mode-chip"><i></i> Pipeline online</span>
-      <a class="text-link" href="/neo4j-browser/?connectURL=bolt%3A%2F%2Flocalhost%3A7690&amp;db=neo4j" target="_blank" rel="noreferrer">Open paper graph</a>
-      <a class="text-link" href="/neo4j-browser/?connectURL=bolt%3A%2F%2Flocalhost%3A7691&amp;db=neo4j" target="_blank" rel="noreferrer">Open separate ontology reference</a>
+      <span class="mode-chip"><i></i> Local workbench</span>
+      <a class="text-link" href="http://127.0.0.1:7477/" target="_blank" rel="noreferrer">Open saved papers</a>
     </div>
   </header>
 
   <main>
     <section class="intro">
-      <p class="eyebrow">Engineered Water Systems / Paper extraction</p>
-      <h1>One paper.<br><span>One visible pipeline.</span></h1>
-      <p class="lede">Follow paper-node and predicate extraction stage by stage. The ontology validates types and domain/range rules but is never copied into the paper graph.</p>
-      <div class="boundary"><strong>Pipeline scope</strong><span>Nodes + predicates + Neo4j upsert</span><span class="muted">Narrative text only</span></div>
+      <p class="eyebrow">Engineered Water Systems</p>
+      <h1>One paper.<br><span>Clear evidence.</span></h1>
+      <p class="lede">Turn one research paper into a clear list of subjects and the connections between them. Every result links back to the sentence that supports it.</p>
+      <div class="boundary"><strong>What is included</strong><span>Written paragraphs</span><span class="muted">Tables, figures, captions, and references are excluded</span></div>
     </section>
 
     <section class="workflow-guide" aria-labelledby="guide-title">
-      <div class="guide-heading"><p class="eyebrow">How it works</p><h2 id="guide-title">From PDF to an auditable graph</h2></div>
+      <div class="guide-heading"><p class="eyebrow">How it works</p><h2 id="guide-title">From PDF to reviewed results</h2></div>
       <ol>
-        <li><b>01</b><div><strong>Choose one PDF</strong><span>Upload your paper or run either included water-sector sample.</span></div></li>
-        <li><b>02</b><div><strong>Watch eight stages</strong><span>The live rail shows parsing, typed nodes, reference resolution, predicates, matching, and Neo4j.</span></div></li>
-        <li><b>03</b><div><strong>Inspect evidence</strong><span>Select a node or relationship to read its exact sentence, context, pages, and decision.</span></div></li>
-        <li><b>04</b><div><strong>Review uncertain cases</strong><span>Resolve vague references and decide whether similar identity nodes are the same or distinct.</span></div></li>
-        <li><b>05</b><div><strong>Open Neo4j</strong><span>Use Open paper graph, then paste the prebuilt query shown with the completed run.</span></div></li>
+        <li><b>01</b><div><strong>Choose a paper</strong><span>Upload a PDF or use one of the included samples.</span></div></li>
+        <li><b>02</b><div><strong>Review the results</strong><span>See what was found, how items connect, and the source sentence for each result.</span></div></li>
+        <li><b>03</b><div><strong>Handle open questions</strong><span>Only uncertain nodes and inferred relationship endpoints need your decision.</span></div></li>
       </ol>
     </section>
 
     <section class="launch-card" aria-labelledby="launch-title">
-      <div class="card-index">INPUT</div>
       <div class="launch-copy">
         <h2 id="launch-title">Start with one paper</h2>
         <p>Embedded narrative text only. Tables, figures, captions, and reference lists stay outside this run.</p>
+        <label class="model-control" for="model-select">
+          <span>Language model</span>
+          <select id="model-select" disabled>
+            <option value="">Loading Ollama models…</option>
+          </select>
+          <small id="model-help">Used for node and relationship decisions in this run.</small>
+        </label>
+        <p class="model-control"><span>Relationship processing</span><small>Each paragraph is generated, refined, and independently validated.</small></p>
       </div>
       <div class="dropzone" id="dropzone">
         <input id="pdf-input" type="file" accept="application/pdf,.pdf" hidden>
@@ -52,77 +56,80 @@
       </div>
       <div class="launch-actions">
         <button class="button blue" id="run-button" type="button" disabled>Run pipeline</button>
-        <button class="button quiet" id="sample-button" data-sample-button type="button">Run the WaterRAG sample</button>
-        <button class="button quiet" id="epanet-sample-button" data-sample-button type="button">Run the EPANET-Agentic sample</button>
+        <button class="button quiet" id="sample-button" data-sample-button type="button" disabled>Run the WaterRAG sample</button>
+        <button class="button quiet" id="epanet-sample-button" data-sample-button type="button" disabled>Run the EPANET-Agentic sample</button>
         <select id="history-select" aria-label="Open a previous run"><option value="">Previous runs</option></select>
       </div>
     </section>
 
     <section class="run-panel" id="run-panel" hidden aria-live="polite">
       <div class="run-heading">
-        <div><p class="eyebrow">Live run</p><h2 id="run-message">Preparing the paper</h2></div>
+        <div><p class="eyebrow">Current run</p><h2 id="run-message">Preparing the paper</h2><p class="run-model" id="run-model"></p></div>
         <span class="run-percent" id="run-percent">0%</span>
       </div>
       <div class="progress-track"><span id="progress-bar"></span></div>
       <ol class="stage-list" id="stage-list">
-        <li data-stage="parsing"><b>01</b><div><strong>Parse text</strong><span class="stage-state">Waiting</span><pre class="stage-output" hidden></pre></div></li>
-        <li data-stage="ner"><b>02</b><div><strong>Required NER</strong><span class="stage-state">Waiting</span><pre class="stage-output" hidden></pre></div></li>
-        <li data-stage="adjudicating"><b>03</b><div><strong>Check nodes</strong><span class="stage-state">Waiting</span><pre class="stage-output" hidden></pre></div></li>
-        <li data-stage="resolving"><b>04</b><div><strong>Resolve references</strong><span class="stage-state">Waiting</span><pre class="stage-output" hidden></pre></div></li>
-        <li data-stage="relationships"><b>05</b><div><strong>Extract predicates</strong><span class="stage-state">Waiting</span><pre class="stage-output" hidden></pre></div></li>
-        <li data-stage="canonicalizing"><b>06</b><div><strong>Canonicalize</strong><span class="stage-state">Waiting</span><pre class="stage-output" hidden></pre></div></li>
-        <li data-stage="matching"><b>07</b><div><strong>Find similar nodes</strong><span class="stage-state">Waiting</span><pre class="stage-output" hidden></pre></div></li>
-        <li data-stage="neo4j"><b>08</b><div><strong>Upsert Neo4j</strong><span class="stage-state">Waiting</span><pre class="stage-output" hidden></pre></div></li>
+        <li data-stage="parsing"><b>01</b><div><strong>Read the paper</strong><span class="stage-state">Waiting</span><span class="stage-summary"></span><details class="stage-details" hidden><summary>Technical details</summary><pre class="stage-output"></pre></details></div></li>
+        <li data-stage="ner"><b>02</b><div><strong>Extract grammatical candidates</strong><span class="stage-state">Waiting</span><span class="stage-summary"></span><details class="stage-details" hidden><summary>Technical details</summary><pre class="stage-output"></pre></details></div></li>
+        <li data-stage="adjudicating"><b>03</b><div><strong>Score ontology types</strong><span class="stage-state">Waiting</span><span class="stage-summary"></span><details class="stage-details" hidden><summary>Technical details</summary><pre class="stage-output"></pre></details></div></li>
+        <li data-stage="resolving"><b>04</b><div><strong>Review node candidates</strong><span class="stage-state">Waiting</span><span class="stage-summary"></span><details class="stage-details" hidden><summary>Technical details</summary><pre class="stage-output"></pre></details></div></li>
+        <li data-stage="relationships"><b>05</b><div><strong>Extract connections</strong><span class="stage-state">Waiting</span><span class="stage-summary"></span><details class="stage-details" hidden><summary>Technical details</summary><pre class="stage-output"></pre></details></div></li>
       </ol>
       <p class="error" id="run-error" hidden></p>
     </section>
 
     <section class="results" id="results" hidden>
       <div class="results-title">
-        <div><p class="eyebrow">Run complete</p><h2 id="paper-title">Combined extraction</h2><p id="run-subtitle"></p><p class="graph-result" id="graph-result"></p><p class="graph-result" id="semantic-result"></p></div>        <a class="button blue" id="bundle-download" href="#">Download complete run</a>
+        <div><p class="eyebrow">Review ready</p><h2 id="paper-title">Paper results</h2><p id="run-subtitle"></p><p class="graph-result" id="graph-result"></p></div><a class="button blue" id="bundle-download" href="#">Download all files</a>
       </div>
 
       <div class="metrics" id="metrics"></div>
+      <details class="processing-details">
+        <summary>Processing details</summary>
+        <p id="semantic-result"></p>
+        <div class="technical-metrics" id="technical-metrics"></div>
+      </details>
 
       <section class="graph-launch" aria-labelledby="graph-launch-title">
-        <div><p class="eyebrow">Neo4j</p><h3 id="graph-launch-title">Open this paper's graph</h3><p>The graph opens in a new tab. Paste the query below and press Ctrl+Enter to render only this paper.</p></div>
-        <div class="graph-query-block"><code id="graph-query"></code><div><button class="button quiet" id="copy-graph-query" type="button">Copy query</button><a class="button blue" id="open-run-graph" href="/neo4j-browser/?connectURL=bolt%3A%2F%2Flocalhost%3A7690&amp;db=neo4j" target="_blank" rel="noreferrer">Open Neo4j</a></div></div>
+        <div><p class="eyebrow">Shared graph</p><h3 id="graph-launch-title">Save this paper for later use</h3><p id="graph-publication-detail">After review, you can add this paper's results to the shared collection once.</p></div>
+        <div class="graph-query-block">
+          <div class="graph-publication-state" id="graph-publication-state" data-state="not_added"><span>Save status</span><strong id="graph-publication-label">Not saved</strong></div>
+          <div class="graph-publication-actions">
+            <button class="button blue" id="add-to-graph" type="button">Save to shared graph</button>
+            <button class="button danger" id="remove-from-graph" type="button" hidden>Remove from shared graph</button>
+            <a class="button blue" id="open-run-graph" href="http://127.0.0.1:7477/" target="_blank" rel="noreferrer" hidden>View saved results</a>
+          </div>
+          <details class="database-details"><summary>Manual database query</summary><code id="graph-query"></code><button class="button quiet" id="copy-graph-query" type="button">Copy query</button></details>
+        </div>
       </section>
 
       <nav class="tabs" aria-label="Result views">
-        <button class="tab active" data-tab="nodes" type="button">Extracted nodes</button>
-        <button class="tab" data-tab="relationships" type="button">Relationships <span id="relationship-badge">0</span></button>
-        <button class="tab" data-tab="questions" type="button">Paper questions <span id="question-badge">0</span></button>
-        <button class="tab" data-tab="references" type="button">Reference review <span id="reference-badge">0</span></button>
-        <button class="tab" data-tab="similar" type="button">Similar nodes <span id="similar-badge">0</span></button>
-        <button class="tab" data-tab="review" type="button">Node review <span id="review-badge">0</span></button>
-        <button class="tab" data-tab="downloads" type="button">Stage files</button>
+        <button class="tab active" data-tab="nodes" type="button">Items found</button>
+        <button class="tab" data-tab="relationships" type="button">Connections <span id="relationship-badge">0</span></button>
+        <button class="tab" data-tab="questions" type="button">Questions answered <span id="question-badge">0</span></button>
+        <button class="tab" data-tab="review" type="button">Other items <span id="review-badge">0</span></button>
+        <button class="tab" data-tab="downloads" type="button">Technical files</button>
       </nav>
 
       <section class="tab-panel active" id="panel-nodes">
         <div class="node-workspace">
           <div class="node-list-block">
             <div class="toolbar">
-              <label><span class="sr-only">Filter nodes</span><input id="node-search" type="search" placeholder="Filter by name or class"></label>
+              <label><span class="sr-only">Filter items</span><input id="node-search" type="search" placeholder="Filter by name or type"></label>
               <span id="node-count-label"></span>
             </div>
             <div class="node-list" id="node-list"></div>
           </div>
           <aside class="evidence-panel" id="evidence-panel">
-            <p class="eyebrow">Traceability</p>
-            <h3>Select a node</h3>
-            <p class="muted">Its exact quote, character span, pages, and adjacent sentence context will appear here.</p>
+            <p class="eyebrow">Source</p>
+            <h3>Select an item</h3>
+            <p class="muted">The exact sentence and nearby context will appear here.</p>
           </aside>
         </div>
       </section>
 
-      <section class="tab-panel" id="panel-references">
-        <div class="section-note"><div><h3>Resolve vague surface mentions</h3><p>Choose only among specific nodes found in the preceding evidence window. The exact phrase and both sentences remain unchanged.</p></div><span class="policy-tag">No selection means no node mention</span></div>
-        <div class="review-list" id="reference-list"></div>
-      </section>
-
       <section class="tab-panel" id="panel-relationships">
-        <div class="section-note"><div><h3>Predicate-first relationship review</h3><p>Every candidate shows its endpoints, permitted predicate, exact evidence, local-model decision, and acceptance gates.</p></div><span class="policy-tag">Only accepted assertions enter Neo4j</span></div>
+        <div class="section-note"><div><h3>How the items are connected</h3><p>Each connection shows the two items, the connection type, and the sentence that supports it.</p></div><span class="policy-tag">Supported connections only</span></div>
         <div class="relationship-filters" aria-label="Filter relationship candidates">
           <button class="relation-filter active" data-relation-filter="all" type="button">All <span id="relation-all-count">0</span></button>
           <button class="relation-filter" data-relation-filter="accepted" type="button">Accepted <span id="relation-accepted-count">0</span></button>
@@ -133,26 +140,49 @@
       </section>
 
       <section class="tab-panel" id="panel-questions">
-        <div class="section-note"><div><h3>Can the graph answer useful paper questions?</h3><p>Each answer below must come from canonical graph facts and retain at least one exact evidence sentence.</p></div><span class="policy-tag" id="question-coverage">0 / 0 answerable</span></div>
+        <div class="section-note"><div><h3>Questions this paper can answer</h3><p>Every answer includes a supporting sentence from the paper.</p></div><span class="policy-tag" id="question-coverage">0 of 0 answered</span></div>
         <div class="review-list" id="question-list"></div>
       </section>
 
-      <section class="tab-panel" id="panel-similar">
-        <div class="section-note"><div><h3>Human merge queue</h3><p>Similarity is a screening tool, not a verdict. No fuzzy candidate is merged until you decide.</p></div><span class="policy-tag">Fuzzy matches require review</span></div>
-        <div class="similar-list" id="similar-list"></div>
-      </section>
-
       <section class="tab-panel" id="panel-review">
-        <div class="section-note"><div><h3>Grounded candidates awaiting a human decision</h3><p>Accept adds the sentence-linked node to the graph and persistent lexicon; reject excludes it. Vague or untraceable nodes cannot be accepted.</p></div><span class="policy-tag">Accept / review / reject</span></div>
+        <div class="section-note"><div><h3>Other items that need a decision</h3><p>Use the source sentence to decide whether each item belongs in the results.</p></div><span class="policy-tag">Keep or exclude</span></div>
         <div class="review-list" id="review-list"></div>
       </section>
 
       <section class="tab-panel" id="panel-downloads">
-        <div class="section-note"><div><h3>Output from every stage</h3><p>JSON and JSONL artifacts retain parsed text, nodes, predicates, evidence, decisions, validation, and the Neo4j write receipt.</p></div></div>
+        <div class="section-note"><div><h3>Technical and audit files</h3><p>These files preserve the detailed processing record for developers and auditors.</p></div></div>
         <div class="download-grid" id="download-grid"></div>
       </section>
     </section>
+
+    <section class="graph-health" id="graph-health" aria-labelledby="graph-health-title">
+      <div>
+        <p class="eyebrow">Shared graph maintenance</p>
+        <h2 id="graph-health-title">Checking the shared graph</h2>
+        <p id="graph-health-detail">Reading the current Neo4j node and relationship counts.</p>
+      </div>
+      <div class="graph-health-actions">
+        <a class="button blue" href="http://127.0.0.1:7477/" target="_blank" rel="noreferrer">Open shared graph</a>
+        <button class="button danger" id="reset-graph-button" type="button">Reset shared graph</button>
+      </div>
+    </section>
   </main>
+
+  <dialog class="reset-dialog" id="reset-graph-dialog" aria-labelledby="reset-dialog-title">
+    <form method="dialog">
+      <p class="eyebrow">Destructive action</p>
+      <h2 id="reset-dialog-title">Remove every node from the shared graph?</h2>
+      <p>This permanently deletes all Neo4j nodes and relationships. Papers that were saved will be marked as removed and cannot be added again.</p>
+      <label class="reset-confirmation" for="reset-confirmation">
+        <span>Type <strong>RESET</strong> to continue</span>
+        <input id="reset-confirmation" name="confirmation" autocomplete="off" spellcheck="false">
+      </label>
+      <div class="reset-dialog-actions">
+        <button class="button quiet" id="cancel-graph-reset" type="button">Cancel</button>
+        <button class="button danger solid" id="confirm-graph-reset" type="button" disabled>Remove all graph data</button>
+      </div>
+    </form>
+  </dialog>
 
   <footer><span>Engineered Water Systems KG</span><span id="footer-status">Checking local services</span></footer>
   <div class="toast" id="toast" role="status" hidden></div>

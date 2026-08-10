@@ -1,4 +1,0 @@
-# Convenience entry point for users working inside Pipeline/.
-# The canonical dependency specification is the repository-level requirements.txt.
--r ../requirements.txt
-

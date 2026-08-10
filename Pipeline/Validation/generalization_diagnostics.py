@@ -24,6 +24,7 @@ FALSE_AGENT_ROLES = {
 
 
 def _sentences(parsed: dict) -> list[dict]:
+    """Handle sentences for this stage. It measures whether the graph is traceable, complete, and generalizable."""
     return [
         {**sentence, "section_title": section.get("title", "")}
         for section in parsed.get("sections", [])
@@ -33,6 +34,7 @@ def _sentences(parsed: dict) -> list[dict]:
 
 
 def _normalized(value: str) -> str:
+    """Handle normalized for this stage. It measures whether the graph is traceable, complete, and generalizable."""
     return " ".join(re.sub(r"[^a-z0-9]+", " ", value.casefold()).split())
 
 
@@ -78,6 +80,7 @@ def build_generalization_diagnostics(
     assertions: list[dict],
     question_evaluation: dict,
 ) -> dict:
+    """Build generalization diagnostics. It measures whether the graph is traceable, complete, and generalizable."""
     profile = build_document_profile(parsed)
     label_counts = Counter(row.get("label", "") for row in entities)
     extraction_channels = Counter(row.get("extraction_method", "unknown") for row in mentions)
@@ -137,7 +140,7 @@ def build_generalization_diagnostics(
         "status": "NEEDS_REVIEW" if warnings else "PASS_WITHOUT_GOLD_STANDARD",
         "document_profile": profile,
         "ner": {
-            "architecture": "exact lexicon + predicate-first SVO arguments + pretrained SciBERT ontology typing + optional LLM adjudication",
+            "architecture": "predicate-first SVO arguments + pretrained SciBERT ontology typing + local Qwen adjudication",
             "accepted_mentions_by_channel": dict(sorted(extraction_channels.items())),
             "optional_external_adapter": "not installed",
             "span_policy": "every accepted mention must match exact source characters",
@@ -158,57 +161,4 @@ def build_generalization_diagnostics(
         "generic_entities": [row.get("canonical_name", "") for row in generic_entities],
         "competency_questions": {"answerable": cq_answerable, "total": cq_total},
         "note": "These are recall and precision diagnostics, not substitutes for human gold annotations.",
-    }
-
-
-def aggregate_llm_usage(
-    node_calls: list[dict],
-    reference_calls: list[dict],
-    relationship_calls: list[dict],
-    *,
-    accepted_mentions: int,
-    assertions: int,
-) -> dict:
-    stages = {
-        "node": node_calls,
-        "reference": reference_calls,
-        "relationship": relationship_calls,
-    }
-    result: dict[str, dict] = {}
-    total_input = total_output = total_calls = total_repairs = 0
-    total_duration_ns = 0
-    for stage, calls in stages.items():
-        input_tokens = sum(int(row.get("usage", {}).get("input_tokens", 0) or 0) for row in calls)
-        output_tokens = sum(int(row.get("usage", {}).get("output_tokens", 0) or 0) for row in calls)
-        duration_ns = sum(int(row.get("usage", {}).get("total_duration_ns", 0) or 0) for row in calls)
-        repairs = sum(int(row.get("safe_repair_count", 0) or 0) for row in calls)
-        result[stage] = {
-            "calls": len(calls),
-            "input_tokens": input_tokens,
-            "output_tokens": output_tokens,
-            "total_tokens": input_tokens + output_tokens,
-            "runtime_seconds": round(duration_ns / 1_000_000_000, 3),
-            "cached_calls": sum(bool(row.get("cached")) for row in calls),
-            "safe_repairs": repairs,
-        }
-        total_calls += len(calls)
-        total_input += input_tokens
-        total_output += output_tokens
-        total_duration_ns += duration_ns
-        total_repairs += repairs
-    total_tokens = total_input + total_output
-    return {
-        "schema_version": "1.0",
-        "by_stage": result,
-        "totals": {
-            "calls": total_calls,
-            "input_tokens": total_input,
-            "output_tokens": total_output,
-            "total_tokens": total_tokens,
-            "runtime_seconds": round(total_duration_ns / 1_000_000_000, 3),
-            "safe_repairs": total_repairs,
-            "tokens_per_accepted_mention": round(total_tokens / max(1, accepted_mentions), 3),
-            "tokens_per_assertion": round(total_tokens / max(1, assertions), 3),
-        },
-        "interpretation": "Token totals measure model utilization, not the causal value of each model call.",
     }

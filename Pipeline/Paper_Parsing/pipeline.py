@@ -19,6 +19,7 @@ from .text_utils import (
 
 
 def _canonical_heading(text: str) -> str:
+    """Handle canonical heading for this stage. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     normalized = visible_heading(text)
     visible = re.sub(
         r"^(?:(?:\d+(?:\.\d+)*|[IVX]+|[A-Z])\.?)\s+", "", normalized,
@@ -80,10 +81,12 @@ def _clean_authors_text(text: str) -> str:
 
 
 def _person_like(line: Line) -> bool:
+    """Handle person like for this stage. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     return bool(re.search(r"[A-Z][A-Za-z-]+(?:\s+[A-Z][A-Za-z-]+)+", line.text))
 
 
 def _affiliation_like(line: Line) -> bool:
+    """Handle affiliation like for this stage. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     return bool(re.search(
         r"\b(?:university|department|school|institute|centre|center|laboratory|academy|faculty)\b",
         line.text, re.I,
@@ -91,6 +94,7 @@ def _affiliation_like(line: Line) -> bool:
 
 
 def _author_furniture(line: Line) -> bool:
+    """Handle author furniture for this stage. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     return bool(
         "@" in line.text
         or re.search(
@@ -102,6 +106,7 @@ def _author_furniture(line: Line) -> bool:
 
 
 def _author_continuation(line: Line) -> bool:
+    """Handle author continuation for this stage. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     clean = line.text.strip(" ,")
     return bool(
         _person_like(line)
@@ -111,6 +116,7 @@ def _author_continuation(line: Line) -> bool:
 
 
 def _is_introduction_heading(text: str) -> bool:
+    """Check whether introduction heading. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     clean = visible_heading(text).strip()
     return bool(re.fullmatch(
         r"(?:(?:\d+(?:\.\d+)*|[IVX]+)\.?\s+)?INTRODUCTION", clean, flags=re.I,
@@ -118,6 +124,7 @@ def _is_introduction_heading(text: str) -> bool:
 
 
 def _is_narrative_text(text: str) -> bool:
+    """Check whether narrative text. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     words = re.findall(r"[A-Za-z]{2,}", text)
     if "cid:" in text and len(words) < 8:
         return False
@@ -125,6 +132,7 @@ def _is_narrative_text(text: str) -> bool:
 
 
 def _section_level(title: str) -> int:
+    """Handle section level for this stage. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     match = re.match(r"^(\d+(?:\.\d+)*)\.", title)
     if match:
         return len(match.group(1).split("."))
@@ -134,6 +142,7 @@ def _section_level(title: str) -> int:
 
 
 def _apply_section_hierarchy(sections: list[dict]) -> None:
+    """Apply section hierarchy. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     stack: list[dict] = []
     for section in sections:
         level = _section_level(section["title"])
@@ -158,6 +167,7 @@ def _apply_section_hierarchy(sections: list[dict]) -> None:
 def _paragraph_groups(
     lines: list[Line], body_size: float, profile: ParsingProfile
 ) -> list[tuple[str | None, list[Line]]]:
+    """Handle paragraph groups for this stage. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     if profile.id == "acs_est":
         expanded: list[Line] = []
         inline_subsection = re.compile(
@@ -179,6 +189,7 @@ def _paragraph_groups(
     heading_line: Line | None = None
 
     def flush() -> None:
+        """Finish the current buffered paragraph or record. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
         nonlocal current
         if current:
             groups.append((current_heading, current))
@@ -247,6 +258,7 @@ def _paragraph_groups(
 
 
 def _is_publisher_furniture(text: str, profile: ParsingProfile) -> bool:
+    """Check whether publisher furniture. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     clean = " ".join(text.split())
     if profile.id == "acs_est" and re.match(
         r"^(?:Received|Revised|Accepted|Published):", clean, flags=re.I
@@ -255,24 +267,11 @@ def _is_publisher_furniture(text: str, profile: ParsingProfile) -> bool:
     return False
 
 
-def _has_explicit_paragraph_start(lines: list[Line], body_size: float) -> bool:
-    """Detect a publisher's first-line indent without treating its return as a split."""
-    if len(lines) < 2:
-        return False
-    first = lines[0]
-    following_x = [
-        line.x0 for line in lines[1:5]
-        if line.page == first.page and abs(line.x0 - first.x0) < body_size * 4
-    ]
-    if not following_x:
-        return False
-    return first.x0 - min(following_x) > body_size * 0.55
-
-
 def _reconstruct_paragraphs(
     groups: list[tuple[str | None, list[Line]]], profile: ParsingProfile,
     body_size: float,
 ) -> tuple[list[tuple[str | None, list[Line]]], int]:
+    """Handle reconstruct paragraphs for this stage. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     reconstructed: list[tuple[str | None, list[Line]]] = []
     discarded = 0
 
@@ -334,6 +333,7 @@ def _reconstruct_paragraphs(
 
 
 def _clean_profile_lines(lines: list[Line], profile: ParsingProfile) -> list[Line]:
+    """Clean profile lines. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     if profile.id != "acs_est":
         return lines
     date = r"[A-Za-z]+\s+\d{1,2},\s+\d{4}"
@@ -352,6 +352,7 @@ def _clean_profile_lines(lines: list[Line], profile: ParsingProfile) -> list[Lin
 def _front_matter(
     lines: list[Line], body_size: float, profile: ParsingProfile
 ) -> tuple[dict, list[Line]]:
+    """Handle front matter for this stage. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     first_page = [line for line in lines if line.page == 1]
     title_seed_candidates = [
         line for line in first_page
@@ -567,6 +568,7 @@ def _front_matter(
 
 
 def parse_pdf(pdf_bytes: bytes, filename: str = "document.pdf") -> dict:
+    """Handle parse pdf for this stage. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     if not pdf_bytes.startswith(b"%PDF"):
         raise ValueError("The uploaded file does not appear to be a PDF.")
     lines, diagnostics = extract_lines(pdf_bytes)
@@ -695,11 +697,3 @@ def parse_pdf(pdf_bytes: bytes, filename: str = "document.pdf") -> dict:
         "sections": sections,
         "chunks": chunks,
     }
-
-
-def as_plain_text(result: dict) -> str:
-    parts: list[str] = []
-    for section in result["sections"]:
-        parts.append(section["title"])
-        parts.extend(paragraph["text"] for paragraph in section["paragraphs"])
-    return "\n\n".join(parts).strip() + "\n"

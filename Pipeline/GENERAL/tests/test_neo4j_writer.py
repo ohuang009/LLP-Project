@@ -47,17 +47,13 @@ class Neo4jWriterTests(unittest.TestCase):
         mentions = [
             {
                 "mention_id": "m1", "document_id": "doc1", "label": "Model",
-                "surface_text": "GPT-4.1", "extraction_method": "lexicon",
+                "surface_text": "GPT-4.1", "extraction_method": "qwen_ollama_three_pass",
                 "source": {"kind": "sentence_span", "sentence_id": "s1", "evidence_quote": "GPT-4.1 answered the question.", "pages": [1]},
             },
             {
                 "mention_id": "m2", "document_id": "doc1", "label": "Model",
-                "surface_text": "it", "extraction_method": "reference_resolution",
+                "surface_text": "the model", "extraction_method": "qwen_ollama_three_pass",
                 "source": {"kind": "sentence_span", "sentence_id": "s2", "evidence_quote": "It produced a concise answer.", "pages": [1]},
-                "reference_resolution": {
-                    "status": "auto_resolved", "antecedent_sentence_id": "s1",
-                    "antecedent_evidence_quote": "GPT-4.1 answered the question.",
-                },
             },
         ]
         rows = neo4j_writer.build_entity_rows("run1", {"id": "doc1"}, entities, mentions)
@@ -66,7 +62,6 @@ class Neo4jWriterTests(unittest.TestCase):
         self.assertEqual(rows[0]["mention_source_locators"], ["s1", "s2"])
         self.assertEqual(rows[0]["mention_sentence_ids"], ["s1", "s2"])
         self.assertEqual(json.loads(rows[0]["mentions"][1])["sentence"], "It produced a concise answer.")
-        self.assertEqual(rows[0]["antecedent_sentence_ids"], ["", "s1"])
 
     def test_document_metadata_mentions_use_exact_field_provenance(self) -> None:
         entities = [{
@@ -159,6 +154,55 @@ class Neo4jWriterTests(unittest.TestCase):
                 "subject_entity_id": "a",
                 "object_entity_id": "b",
             }])
+
+    def test_remove_document_deletes_only_the_selected_paper_contribution(self) -> None:
+        calls: list[list[dict]] = []
+        verification_calls = 0
+
+        def post(statements: list[dict]) -> dict:
+            nonlocal verification_calls
+            calls.append(statements)
+            if any("RETURN entities,relationships" in item["statement"] for item in statements):
+                verification_calls += 1
+                row = [4, 2] if verification_calls == 1 else [0, 0]
+                return {"results": [{"data": [{"row": row}]}]}
+            return {"results": []}
+
+        with patch.object(neo4j_writer, "_post", side_effect=post):
+            result = neo4j_writer.remove_document("doc1", "run1")
+
+        statements = [item["statement"] for call in calls for item in call]
+        self.assertEqual(result["status"], "removed")
+        self.assertEqual(result["entities_removed_or_detached"], 4)
+        self.assertEqual(result["relationships_removed"], 2)
+        self.assertTrue(any("r.documentId=$document_id DELETE r" in value for value in statements))
+        self.assertTrue(any("any(source IN" in value and "mentionDocumentIds" in value for value in statements))
+        self.assertTrue(any("all(source IN" in value and "DETACH DELETE e" in value for value in statements))
+
+    def test_reset_graph_deletes_every_node_and_verifies_empty_database(self) -> None:
+        calls: list[list[dict]] = []
+        count_calls = 0
+
+        def post(statements: list[dict]) -> dict:
+            nonlocal count_calls
+            calls.append(statements)
+            if len(statements) == 2 and all("RETURN count" in item["statement"] for item in statements):
+                count_calls += 1
+                values = [605, 400] if count_calls == 1 else [0, 0]
+                return {"results": [
+                    {"data": [{"row": [values[0]]}]},
+                    {"data": [{"row": [values[1]]}]},
+                ]}
+            return {"results": []}
+
+        with patch.object(neo4j_writer, "_post", side_effect=post):
+            result = neo4j_writer.reset_graph()
+
+        statements = [item["statement"] for call in calls for item in call]
+        self.assertEqual(result["status"], "reset")
+        self.assertEqual(result["nodes_removed"], 605)
+        self.assertEqual(result["relationships_removed"], 400)
+        self.assertIn("MATCH (n) DETACH DELETE n", statements)
 
 
 if __name__ == "__main__":

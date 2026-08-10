@@ -20,10 +20,21 @@ Pipeline/GENERAL/cache/
 Pipeline/GENERAL/output/
 Pipeline/GENERAL/outputs/
 
+# Generated extraction evidence (keep only PipelineAudits/README.md in source)
+PipelineAudits/runs/
+PipelineAudits/benchmarks/
+PipelineAudits/exports/
+PipelineAudits/reports/
+PipelineAudits/reference/
+PipelineAudits/tmp/
+PipelineAudits/evaluation_*.json
+PipelineAudits/evaluation_*.md
+
 # Local Neo4j distribution, databases, and generated graph assets
 LocalNeo4j/downloads/
 LocalNeo4j/runtime/
 LocalNeo4j/instances/
+LocalNeo4j/storage/
 LocalNeo4j/load-logs/
 LocalNeo4j/graph-assets/
 

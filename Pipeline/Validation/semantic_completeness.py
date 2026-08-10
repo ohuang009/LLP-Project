@@ -7,6 +7,7 @@ CORE_AI_LABELS = {"AISystem", "Agent", "Model"}
 
 
 def _sentences(parsed: dict) -> list[dict]:
+    """Handle sentences for this stage. It measures whether the graph is traceable, complete, and generalizable."""
     return [
         sentence
         for section in parsed.get("sections", [])
@@ -16,6 +17,7 @@ def _sentences(parsed: dict) -> list[dict]:
 
 
 def _signal(sentences: list[dict], pattern: str) -> list[dict]:
+    """Handle signal for this stage. It measures whether the graph is traceable, complete, and generalizable."""
     regex = re.compile(pattern, re.I)
     return [
         {"sentence_id": row["id"], "quote": row["text"], "pages": row.get("pages", [])}

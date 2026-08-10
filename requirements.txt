@@ -1,5 +1,5 @@
 # Canonical Python environment for the complete paper-to-knowledge-graph pipeline.
-# Python 3.11 or 3.12 is recommended. See Pipeline/README.md before installing.
+# Python 3.11 or 3.12 is recommended. See README.md before installing.
 
 # PDF parsing
 pdfplumber>=0.11,<0.12
@@ -9,14 +9,11 @@ numpy>=1.26,<3
 spacy>=3.8,<3.9
 en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
 
-# Local SciBERT typing and optional embedding-based entity resolution.
+# SciBERT typing.
 # sentence-transformers installs the compatible Transformers/PyTorch stack;
 # the explicit ranges make those runtime dependencies visible and reproducible.
 sentence-transformers>=5,<6
 torch>=2.2,<3
 transformers>=4.48,<6
 huggingface-hub>=0.27,<2
-
-# Optional corpus-integrity and PDF verification tools shipped with the repository.
-pypdf>=5,<7
 

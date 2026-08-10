@@ -1,0 +1,53 @@
+{
+  "schema_version": "3.0",
+  "ollama": {
+    "provider": "ollama",
+    "model": "qwen3:4b-instruct",
+    "base_url": "http://127.0.0.1:11434",
+    "temperature": 0,
+    "think": false,
+    "context_window": 32768,
+    "max_tokens": 4096,
+    "keep_alive": "30m",
+    "timeout_seconds": 600,
+    "retries": 2,
+    "response_format": "tsv_text"
+  },
+  "batching": {
+    "strategy": "dynamic_token_budget",
+    "chars_per_token": 3.2,
+    "context_safety_tokens": 2048,
+    "output_token_budget": 3072
+  },
+  "grammar": {
+    "parser_model": "en_core_web_sm",
+    "strategy": "raw_main_clause_subject_verb_object",
+    "context_policy": "subordinate_and_non_core_fragments",
+    "cleanup_policy": "none",
+    "scibert_model": "allenai/scibert_scivocab_uncased",
+    "scibert_local_files_only": true,
+    "typing_threshold": 0.25,
+    "typing_min_margin": 0.015,
+    "typing_top_k": 5
+  },
+  "nodes": {
+    "batch_unit": "paragraph",
+    "context": "previous_target_next_sentence",
+    "llm_passes": [
+      "specific_name_cleanup",
+      "ontology_typing_with_none",
+      "rubric_judgment"
+    ],
+    "decisions": ["accepted", "needs_review", "disregard"],
+    "human_gate": "needs_review_nodes_are_not_added_until_accepted"
+  },
+  "relationships": {
+    "batch_unit": "paragraph",
+    "minimum_per_paragraph": 5,
+    "maximum_per_paragraph": 10,
+    "llm_passes": ["generation", "refinement", "validation"],
+    "endpoint_policy": "at_least_one_accepted_node",
+    "inferred_node_policy": "human_review_before_graph_addition",
+    "acceptance_policy": "all_deterministic_gates_and_llm_validator_accept"
+  }
+}

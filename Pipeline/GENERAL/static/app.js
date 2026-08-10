@@ -1,6 +1,14 @@
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-const state = { file: null, jobId: null, job: null, poll: null, relationFilter: "all" };
+const state = {
+  file: null,
+  jobId: null,
+  job: null,
+  poll: null,
+  relationFilter: "all",
+  llmModel: "",
+  modelsReady: false,
+};
 
 function esc(value = "") {
   return String(value).replace(/[&<>"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[char]));
@@ -26,11 +34,46 @@ function chooseFile(file) {
   if (!file.name.toLowerCase().endsWith(".pdf")) return toast("Choose a PDF paper.");
   state.file = file;
   $("#file-label").textContent = file.name;
-  $("#run-button").disabled = false;
+  $("#run-button").disabled = !state.modelsReady;
+}
+
+function modelOptionLabel(model) {
+  const detail = [model.parameter_size, model.quantization].filter(Boolean).join(" · ");
+  return detail ? `${model.name} — ${detail}` : model.name;
+}
+
+async function loadModels() {
+  const select = $("#model-select");
+  const help = $("#model-help");
+  try {
+    const payload = await api("/api/models");
+    const models = payload.models || [];
+    state.modelsReady = Boolean(payload.available && models.length);
+    select.innerHTML = models.length
+      ? models.map(model => `<option value="${esc(model.name)}">${esc(modelOptionLabel(model))}</option>`).join("")
+      : `<option value="">No Ollama models found</option>`;
+    state.llmModel = models.some(model => model.name === payload.default_model)
+      ? payload.default_model
+      : (models[0]?.name || "");
+    select.value = state.llmModel;
+    select.disabled = !state.modelsReady;
+    help.textContent = state.modelsReady
+      ? "Used for node and relationship decisions in this run."
+      : (payload.error || "Start Ollama and install the configured Qwen model.");
+    $("#run-button").disabled = !(state.file && state.modelsReady);
+    $$('[data-sample-button]').forEach(button => { button.disabled = !state.modelsReady; });
+  } catch (error) {
+    state.modelsReady = false;
+    select.innerHTML = `<option value="">Models unavailable</option>`;
+    select.disabled = true;
+    help.textContent = error.message;
+    $("#run-button").disabled = true;
+    $$('[data-sample-button]').forEach(button => { button.disabled = true; });
+  }
 }
 
 function stageIndex(stage) {
-  return {queued: -1, parsing: 0, ner: 1, adjudicating: 2, resolving: 3, relationships: 4, canonicalizing: 5, matching: 6, neo4j: 7, complete: 8}[stage] ?? -1;
+  return {queued: -1, parsing: 0, ner: 1, adjudicating: 2, resolving: 3, relationships: 4, complete: 5}[stage] ?? -1;
 }
 
 function stageOutput(output = {}) {
@@ -40,9 +83,62 @@ function stageOutput(output = {}) {
   }).join("\n");
 }
 
+function number(value) {
+  return Number(value || 0).toLocaleString();
+}
+
+function duration(seconds) {
+  const total = Math.round(Number(seconds || 0));
+  if (total < 60) return `${total} seconds`;
+  if (total < 3600) return `${Math.floor(total / 60)} min ${total % 60} sec`;
+  return `${Math.floor(total / 3600)} hr ${Math.round((total % 3600) / 60)} min`;
+}
+
+function plainLabel(value = "") {
+  return String(value)
+    .replaceAll("_", " ")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function stageSummary(stage, output = {}) {
+  const summaries = {
+    parsing: () => `${number(output.sentences)} sentences read across ${number(output.narrative_pages || output.pages)} pages`,
+    ner: () => `${number(output.triples)} raw subject-verb-object candidates from ${number(output.sentences)} sentences`,
+    adjudicating: () => `${number(output.candidates)} candidates scored; ${number(output.untyped)} returned no SciBERT type`,
+    resolving: () => `${number(output.accepted_mentions)} supported items kept; ${number(output.needs_review)} need review`,
+    relationships: () => `${number(output.accepted || output.accepted_assertions || output.assertions)} supported connections kept`,
+  };
+  return summaries[stage]?.() || "Step completed";
+}
+
+function runMessage(job) {
+  if (job.status === "failed") return "The run stopped";
+  if (job.status === "complete") return "Results are ready to review";
+  return ({
+    queued: "Waiting to start",
+    parsing: "Reading the paper",
+    ner: "Extracting grammatical candidates",
+    adjudicating: "Scoring ontology types",
+    resolving: "Reviewing node candidates",
+    relationships: "Extracting connections",
+  })[job.stage] || "Working on the paper";
+}
+
 function updateRun(job) {
+  if (job.status === "complete" && !(job.stages || []).length) {
+    $("#run-panel").hidden = true;
+    return;
+  }
   $("#run-panel").hidden = false;
-  $("#run-message").textContent = job.message || "Working...";
+  $("#run-message").textContent = runMessage(job);
+  const runDetails = [];
+  if (job.llm_model) runDetails.push(`Model: ${job.llm_model}`);
+  if (job.processing_unit) runDetails.push(`Relationships: ${job.processing_unit}`);
+  $("#run-model").textContent = runDetails.join(" · ");
   $("#run-percent").textContent = `${job.progress || 0}%`;
   $("#progress-bar").style.width = `${job.progress || 0}%`;
   const current = stageIndex(job.stage);
@@ -55,11 +151,12 @@ function updateRun(job) {
     li.classList.toggle("active", active);
     const stageState = $(".stage-state", li);
     if (stageState) stageState.textContent = done ? "Completed" : active ? "Running" : (!report && job.status === "complete" ? "Skipped" : "Waiting");
+    const summary = $(".stage-summary", li);
+    if (summary) summary.textContent = done && report?.output ? stageSummary(report.stage, report.output) : "";
+    const details = $(".stage-details", li);
+    if (details) details.hidden = !report?.output;
     const output = $(".stage-output", li);
-    if (output) {
-      output.hidden = !report?.output;
-      output.textContent = report?.output ? stageOutput(report.output) : "";
-    }
+    if (output) output.textContent = report?.output ? stageOutput(report.output) : "";
   });
   const error = $("#run-error");
   error.hidden = job.status !== "failed";
@@ -77,8 +174,8 @@ async function begin(path, options = {}) {
     pollJob();
   } catch (error) {
     toast(error.message);
-    $("#run-button").disabled = !state.file;
-    $$('[data-sample-button]').forEach(button => { button.disabled = false; });
+    $("#run-button").disabled = !(state.file && state.modelsReady);
+    $$('[data-sample-button]').forEach(button => { button.disabled = !state.modelsReady; });
   }
 }
 
@@ -90,14 +187,14 @@ async function pollJob() {
     updateRun(job);
     if (job.status === "complete") {
       renderResults(job);
-      $("#run-button").disabled = !state.file;
-      $$('[data-sample-button]').forEach(button => { button.disabled = false; });
+      $("#run-button").disabled = !(state.file && state.modelsReady);
+      $$('[data-sample-button]').forEach(button => { button.disabled = !state.modelsReady; });
       loadHistory();
       return;
     }
     if (job.status === "failed") {
-      $("#run-button").disabled = !state.file;
-      $$('[data-sample-button]').forEach(button => { button.disabled = false; });
+      $("#run-button").disabled = !(state.file && state.modelsReady);
+      $$('[data-sample-button]').forEach(button => { button.disabled = !state.modelsReady; });
       return;
     }
     state.poll = setTimeout(pollJob, 900);
@@ -112,80 +209,135 @@ function metric(value, label, blue = false) {
 }
 
 function renderResults(job) {
-  const counts = job.summary.counts;
+  const counts = job.summary.counts || {};
+  const relationshipCandidates = job.relationship_candidates || [];
+  const questions = job.question_answerability?.questions || [];
+  const answeredQuestions = questions.filter(row => row.status === "answerable").length;
+  const connectionReviews = relationshipCandidates.filter(row => row.status === "needs_review").length;
+  const reviewCount = (counts.node_review_candidates || 0) + connectionReviews;
   $("#results").hidden = false;
-  $("#paper-title").textContent = job.summary.paper.title || job.summary.source_filename;
-  const llm = job.summary.llm;
+  const document = job.summary.document || {};
+  $("#paper-title").textContent = document.title || document.filename || "Paper results";
   const runtime = job.summary.timing?.total_seconds;
-  $("#run-subtitle").textContent = `${job.summary.parser_summary.sentences} narrative sentences | ${llm.used ? `local ${llm.model} check completed` : "deterministic node checks used"}${runtime ? ` | ${runtime.toFixed(1)} seconds` : ""}`;
-  const graph = job.neo4j || job.summary.neo4j || {};
-  const graphResult = $("#graph-result");
-  if (graphResult) graphResult.textContent = graph.status === "upserted"
-    ? `NEO4J UPDATED | ${graph.entities} paper nodes | ${graph.mentions} embedded mentions | ${graph.relationships} evidence-backed relationships | run ${graph.run_id}`
-    : "Neo4j write receipt unavailable for this earlier run.";
+  $("#run-subtitle").textContent = `${number(job.summary.parser_summary.sentences)} written sentences reviewed${runtime ? ` in ${duration(runtime)}` : ""}.`;
+  renderGraphPublication(job);
   $("#bundle-download").href = `/api/jobs/${job.job_id}/bundle.zip`;
   const completeness = job.validation?.semantic_completeness || job.summary.semantic_completeness || {};
   const semanticResult = $("#semantic-result");
   if (semanticResult) {
     semanticResult.textContent = completeness.status
-      ? `SEMANTIC COVERAGE ${completeness.status} | ${completeness.checks_passed} / ${completeness.checks_applicable} applicable checks | ${Math.round((completeness.coverage_score || 0) * 100)}%`
-      : "Semantic coverage was not measured for this earlier run.";
+      ? `${completeness.checks_passed} of ${completeness.checks_applicable} coverage checks passed (${Math.round((completeness.coverage_score || 0) * 100)}%).`
+      : "Coverage checks were not available for this earlier run.";
     semanticResult.classList.toggle("warning", completeness.status === "INCOMPLETE");
   }
   $("#metrics").innerHTML = [
-    ...(runtime ? [metric(runtime.toFixed(1), "pipeline seconds", true)] : []),
-    metric(counts.accepted_mentions, "grounded mentions", true),
-    metric(counts.canonical_entities, "canonical entities"),
-    metric(counts.reference_mentions_resolved || 0, "resolved vague mentions", true),
-    metric(counts.reference_review_pending || 0, "references to review"),
-    metric(counts.node_review_candidates, "node candidates to review"),
-    metric(`${counts.semantic_checks_passed || 0}/${counts.semantic_checks_applicable || 0}`, "semantic checks", true),
-    metric(counts.similar_node_candidates, "possible duplicate pairs", true),
-    metric(counts.relationships || 0, "relationships extracted"),
+    metric(counts.canonical_entities || 0, "items found", true),
+    metric(counts.relationships || 0, "supported connections"),
+    metric(reviewCount, "decisions needed", reviewCount > 0),
+    metric(answeredQuestions || counts.answerable_questions || 0, "questions answered"),
   ].join("");
-  const documentId = job.summary.paper.id;
+  $("#technical-metrics").innerHTML = [
+    metric(counts.accepted_mentions || 0, "supported text references"),
+    metric(counts.rejected_node_candidates || 0, "items excluded"),
+    metric(`${counts.semantic_checks_passed || 0}/${counts.semantic_checks_applicable || 0}`, "coverage checks"),
+    ...(runtime ? [metric(runtime.toFixed(1), "processing seconds")] : []),
+  ].join("");
+  const documentId = document.id || "";
   state.graphQuery = `MATCH p=(source)-[relationship]-(target)\nWHERE relationship.documentId = '${documentId}'\nRETURN p\nLIMIT 150`;
   $("#graph-query").textContent = state.graphQuery;
-  const relationshipCandidates = job.relationship_candidates || [];
   $("#relationship-badge").textContent = relationshipCandidates.length;
-  $("#similar-badge").textContent = counts.similar_node_candidates;
-  $("#review-badge").textContent = counts.node_review_candidates;
-  $("#reference-badge").textContent = counts.reference_review_pending || 0;
+  $("#review-badge").textContent = counts.node_review_candidates || 0;
   renderNodes(job.entities, job.mentions);
   renderRelationships(relationshipCandidates);
   renderQuestions(job.question_answerability || {questions: []});
-  renderSimilar(job.similar_nodes);
-  renderReferenceReview(job.reference_resolutions || []);
   renderReview(job.node_review_candidates);
   renderDownloads(job.downloads);
   refreshGraphHealth();
   $("#results").scrollIntoView({behavior: "smooth", block: "start"});
 }
 
+function renderGraphPublication(job) {
+  const publication = job.graph_publication || job.summary.graph_publication || {state: "not_added", add_count: 0};
+  const graph = job.neo4j || job.summary.neo4j || {};
+  const stateNode = $("#graph-publication-state");
+  const stateLabel = $("#graph-publication-label");
+  const detail = $("#graph-publication-detail");
+  const addButton = $("#add-to-graph");
+  const removeButton = $("#remove-from-graph");
+  const graphLink = $("#open-run-graph");
+  const labels = {not_added: "Not saved", added: "Saved", removed: "Removed"};
+  stateNode.dataset.state = publication.state;
+  stateLabel.textContent = labels[publication.state] || publication.state;
+  addButton.hidden = publication.state !== "not_added";
+  removeButton.hidden = publication.state !== "added";
+  graphLink.hidden = publication.state !== "added";
+  graphLink.href = publication.graph_url || "http://127.0.0.1:7477/";
+  addButton.disabled = false;
+  removeButton.disabled = false;
+
+  if (publication.state === "added") {
+    detail.textContent = "This paper's reviewed results are in the shared graph. It cannot be saved a second time.";
+  } else if (publication.state === "removed") {
+    detail.textContent = "This paper was removed from the shared graph. Because it was saved once already, it cannot be saved again.";
+  } else {
+    detail.textContent = "Review is complete. Save this paper once, or leave the shared graph unchanged.";
+  }
+
+  const graphResult = $("#graph-result");
+  if (!graphResult) return;
+  if (publication.state === "added") {
+    graphResult.textContent = "Saved to the shared graph.";
+  } else if (publication.state === "removed") {
+    graphResult.textContent = "Removed from the shared graph.";
+  } else {
+    graphResult.textContent = "Ready to review. Not yet saved to the shared graph.";
+  }
+}
+
+async function graphAction(action) {
+  if (!state.jobId) return;
+  const addButton = $("#add-to-graph");
+  const removeButton = $("#remove-from-graph");
+  addButton.disabled = true;
+  removeButton.disabled = true;
+  try {
+    await api(`/api/jobs/${state.jobId}/graph/${action}`, {method: "POST"});
+    state.job = await api(`/api/jobs/${state.jobId}`);
+    renderGraphPublication(state.job);
+    renderDownloads(state.job.downloads || []);
+    await refreshGraphHealth();
+    toast(action === "add" ? "Paper saved to the shared graph." : "Paper removed from the shared graph.");
+  } catch (error) {
+    toast(error.message);
+    addButton.disabled = false;
+    removeButton.disabled = false;
+  }
+}
+
 function renderQuestions(result) {
   const questions = result.questions || [];
   const answerable = questions.filter(row => row.status === "answerable").length;
   $("#question-badge").textContent = answerable;
-  $("#question-coverage").textContent = `${answerable} / ${questions.length} answerable`;
+  $("#question-coverage").textContent = `${answerable} of ${questions.length} answered`;
   $("#question-list").innerHTML = questions.length ? questions.map(row => `
     <article class="review-card question-card">
-      <div><span class="tag">${esc(row.status.replaceAll("_", " "))}</span><h4>${esc(row.question)}</h4>
-      ${row.answers.length ? `<ul>${row.answers.map(answer => `<li>${esc(answer)}</li>`).join("")}</ul>` : `<p>No evidence-backed graph fact currently answers this question.</p>`}</div>
+      <div><span class="tag">${row.status === "answerable" ? "answered" : "not answered"}</span><h4>${esc(row.question)}</h4>
+      ${row.answers.length ? `<ul>${row.answers.map(answer => `<li>${esc(answer)}</li>`).join("")}</ul>` : `<p>The reviewed results do not currently answer this question.</p>`}</div>
       <div class="question-evidence">${row.evidence.slice(0, 3).map(item => `<div><blockquote>"${esc(item.quote)}"</blockquote><span class="tag">page ${esc(item.pages.join(", ") || "unknown")}</span></div>`).join("")}</div>
-    </article>`).join("") : `<div class="empty">This earlier run does not include a question-answerability evaluation.</div>`;
+    </article>`).join("") : `<div class="empty">No paper questions are available for this run.</div>`;
 }
 
 function gateLabel(value) {
   return ({
-    endpoints_resolved: "unresolved endpoint",
-    evidence_exact: "evidence mismatch",
-    predicate_permitted: "predicate not permitted",
-    domain_range: "domain/range mismatch",
-    not_negated: "negated statement",
-    not_modal: "modal language",
-    not_hypothetical: "hypothetical statement",
-    attribution_known: "unknown attribution",
-    observation_structure: "missing observation structure",
+    endpoints_resolved: "one of the items could not be identified",
+    evidence_exact: "the source sentence did not match",
+    predicate_permitted: "the connection type was not allowed",
+    domain_range: "the two item types do not support this connection",
+    not_negated: "the paper says this did not happen",
+    not_modal: "the paper presents this only as a possibility",
+    not_hypothetical: "the paper presents this as hypothetical",
+    attribution_known: "the source of the claim is unclear",
+    observation_structure: "the observation is incomplete",
   })[value] || value.replaceAll("_", " ");
 }
 
@@ -199,18 +351,20 @@ function renderRelationships(rows) {
   $("#relation-rejected-count").textContent = counts.rejected;
   const visible = rows.filter(row => state.relationFilter === "all" || row.status === state.relationFilter);
   $("#relationship-list").innerHTML = visible.length ? visible.map(row => {
-    const predicate = row.llm_decision?.predicate || row.allowed_predicates?.[0] || "Pending";
+    const predicate = plainLabel(row.llm_decision?.predicate || row.allowed_predicates?.[0] || "Not decided");
     const failed = Object.entries(row.gates || {}).filter(([, pass]) => !pass).map(([gate]) => gateLabel(gate));
+    const status = ({accepted: "supported", review: "needs review", rejected: "excluded"})[row.status] || "not decided";
     return `<article class="relationship-card" data-status="${esc(row.status || "pending")}">
       <div class="relationship-triple">
-        <div><small>${esc(row.subject_label)}</small><strong>${esc(row.subject_text)}</strong></div>
-        <div class="predicate"><strong>${esc(predicate)}</strong><small>${esc(row.trigger_text ? `trigger: ${row.trigger_text}` : (row.channel || "").replaceAll("_", " "))}</small></div>
-        <div><small>${esc(row.object_label)}</small><strong>${esc(row.object_text)}</strong></div>
+        <div><small>${esc(plainLabel(row.subject_label))}</small><strong>${esc(row.subject_text)}</strong></div>
+        <div class="predicate"><small>connection</small><strong>${esc(predicate)}</strong></div>
+        <div><small>${esc(plainLabel(row.object_label))}</small><strong>${esc(row.object_text)}</strong></div>
       </div>
-      <div class="relationship-meta"><span class="relation-status">${esc(row.status || "pending")}</span><span>${esc((row.attribution || "unknown").replaceAll("_", " "))}</span><span>${esc(failed.length ? `Gate: ${failed.join(", ")}` : "All gates passed")}</span></div>
-      <details><summary>Evidence and decision</summary><blockquote>${esc(row.evidence_quote || "")}</blockquote><p>${esc(row.decision_reason || row.llm_decision?.reason || "Decision pending.")}</p></details>
+      <div class="relationship-meta"><span class="relation-status">${esc(status)}</span>${failed.length ? `<span>${esc(failed.join("; "))}</span>` : ""}</div>
+      <details><summary>Source and explanation</summary><blockquote>${esc(row.evidence_quote || "")}</blockquote><p>${esc(row.decision_reason || row.llm_decision?.reason || "No explanation is available.")}</p></details>
+      <details class="technical-disclosure"><summary>Technical details</summary><p>Method: ${esc(plainLabel(row.channel || "unknown"))}<br>Trigger: ${esc(row.trigger_text || "not recorded")}<br>Attribution: ${esc(plainLabel(row.attribution || "unknown"))}</p></details>
     </article>`;
-  }).join("") : `<div class="empty">${rows.length ? "No relationships match this filter." : "No relationship candidates were created for this run."}</div>`;
+  }).join("") : `<div class="empty">${rows.length ? "No connections match this filter." : "No connections were found in this run."}</div>`;
 }
 
 function renderNodes(entities, mentions) {
@@ -225,9 +379,9 @@ function renderNodes(entities, mentions) {
     root.innerHTML = rows.length ? rows.map((row, index) => `
       <button class="node-row" type="button" data-entity="${esc(row.entity_id)}">
         <span class="node-dot">${esc(row.label.slice(0,2).toUpperCase())}</span>
-        <span class="node-name"><strong>${esc(row.canonical_name)}</strong><small>${esc(row.label)} · ${row.aliases.length} alias${row.aliases.length === 1 ? "" : "es"}</small></span>
-        <span class="node-count">×${row.mention_count}</span>
-      </button>`).join("") : `<div class="empty">No nodes match this filter.</div>`;
+        <span class="node-name"><strong>${esc(row.canonical_name)}</strong><small>${esc(plainLabel(row.label))}</small></span>
+        <span class="node-count">${row.mention_count} mention${row.mention_count === 1 ? "" : "s"}</span>
+      </button>`).join("") : `<div class="empty">No items match this filter.</div>`;
     $$(".node-row", root).forEach(button => button.addEventListener("click", () => {
       $$(".node-row", root).forEach(row => row.classList.remove("active"));
       button.classList.add("active");
@@ -250,145 +404,39 @@ function renderEvidence(entity, mentionMap) {
   if (!mention) return;
   const source = mention.source || {};
   const context = source.context_sentences || [{role:"target", text:source.evidence_quote || mention.surface_text, sentence_id:source.sentence_id || "metadata"}];
-  const resolvedReferences = entity.mention_ids.map(id => mentionMap.get(id)).filter(row => row?.reference_resolution);
-  const resolvedReferenceHtml = resolvedReferences.length ? `
-    <div class="context-label">Resolved surface mentions</div>
-    ${resolvedReferences.map(row => {
-      const resolution = row.reference_resolution;
-      return `<div class="reference-evidence">
-        <div class="evidence-meta"><span class="tag">${esc(resolution.status.replaceAll("_", " "))}</span><span class="tag">${Math.round((resolution.confidence || 0) * 100)}% confidence</span></div>
-        <p><strong>“${esc(row.surface_text)}” → ${esc(resolution.target_canonical_name)}</strong></p>
-        <blockquote>${esc(row.source.evidence_quote)}</blockquote>
-        <small>Antecedent evidence</small><blockquote>${esc(resolution.antecedent_evidence_quote)}</blockquote>
-      </div>`;
-    }).join("")}` : "";
   $("#evidence-panel").innerHTML = `
-    <p class="eyebrow">Traceability / ${esc(entity.label)}</p>
+    <p class="eyebrow">Source / ${esc(plainLabel(entity.label))}</p>
     <h3>${esc(entity.canonical_name)}</h3>
-    <p class="muted">${esc(entity.aliases.join(" · "))}</p>
-    <div class="evidence-meta"><span class="tag">${esc(mention.extraction_method)}</span><span class="tag">${esc(mention.validation?.judge || "traceable rule")}</span>${source.pages?.length ? `<span class="tag">page${source.pages.length > 1 ? "s" : ""} ${esc(source.pages.join(", "))}</span>` : ""}</div>
-    <div class="context-label">Exact 2–3 sentence evidence window</div>
-    ${context.map(item => `<div class="quote${item.role === "target" ? " target" : ""}"><span class="context-role">${esc(item.role)} sentence</span><br>${item.role === "target" ? highlightedQuote(item.text, source.start_char, source.end_char) : esc(item.text)}</div>`).join("")}
-    <div class="trace-grid">
-      <div><small>Source span</small><code>${esc(source.start_char ?? "—")} → ${esc(source.end_char ?? "—")}</code></div>
-      <div><small>Section</small><code>${esc(source.section_title || source.field || "document metadata")}</code></div>
-      <div><small>Sentence ID</small><code>${esc(source.sentence_id || "metadata")}</code></div>
-      <div><small>Mention ID</small><code>${esc(mention.mention_id)}</code></div>
-    </div>${resolvedReferenceHtml}`;
+    ${entity.aliases.length ? `<p class="muted">Also written as ${esc(entity.aliases.join(", "))}</p>` : ""}
+    <div class="evidence-meta">${source.pages?.length ? `<span class="tag">page${source.pages.length > 1 ? "s" : ""} ${esc(source.pages.join(", "))}</span>` : ""}</div>
+    <div class="context-label">Supporting sentence and context</div>
+    ${context.map(item => `<div class="quote${item.role === "target" ? " target" : ""}"><span class="context-role">${item.role === "target" ? "supporting sentence" : "context"}</span><br>${item.role === "target" ? highlightedQuote(item.text, source.start_char, source.end_char) : esc(item.text)}</div>`).join("")}
+    <details class="technical-disclosure"><summary>Technical details</summary>
+      <p>Method: ${esc(plainLabel(mention.extraction_method))}<br>Check: ${esc(plainLabel(mention.validation?.judge || "traceable rule"))}</p>
+      <div class="trace-grid">
+        <div><small>Character range</small><code>${esc(source.start_char ?? "—")} → ${esc(source.end_char ?? "—")}</code></div>
+        <div><small>Section</small><code>${esc(source.section_title || source.field || "document metadata")}</code></div>
+        <div><small>Sentence ID</small><code>${esc(source.sentence_id || "metadata")}</code></div>
+        <div><small>Item ID</small><code>${esc(mention.mention_id)}</code></div>
+      </div>
+    </details>`;
 }
 
 function normalized(value = "") { return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(); }
-
-function renderSimilar(pairs) {
-  const root = $("#similar-list");
-  if (!pairs.length) {
-    root.innerHTML = `<div class="empty">No possible duplicates crossed the review threshold in this run.</div>`;
-    return;
-  }
-  root.innerHTML = pairs.map(pair => `
-    <article class="similar-card" data-resolution="${esc(pair.resolution_id)}">
-      <div class="similar-head"><span>${esc(pair.label)}</span><span class="score">${Math.round(pair.score*100)}% similarity</span></div>
-      <div class="pair">
-        <div class="pair-node"><h4>${esc(pair.left.canonical_name)}</h4><p>${pair.left.mention_count} mention${pair.left.mention_count === 1 ? "" : "s"} · ${esc(pair.left.aliases.join(" · "))}</p></div>
-        <div class="pair-vs">VS</div>
-        <div class="pair-node"><h4>${esc(pair.right.canonical_name)}</h4><p>${pair.right.mention_count} mention${pair.right.mention_count === 1 ? "" : "s"} · ${esc(pair.right.aliases.join(" · "))}</p></div>
-      </div>
-      <div class="similar-foot">
-        <span class="reasons">${esc(pair.reasons.join(" · "))}</span>
-        ${pair.status === "pending" ? `
-          <select aria-label="Canonical name"><option>${esc(pair.recommended_canonical_name)}</option>${[pair.left.canonical_name,pair.right.canonical_name].filter(name => name !== pair.recommended_canonical_name).map(name => `<option>${esc(name)}</option>`).join("")}</select>
-          <button class="button quiet distinct-button" type="button">Keep separate</button>
-          <button class="button blue same-button" type="button">Same node</button>` : `<span class="decision">Reviewed: ${esc(pair.status)}</span>`}
-      </div>
-    </article>`).join("");
-  $$(".similar-card", root).forEach(card => {
-    const same = $(".same-button", card);
-    const distinct = $(".distinct-button", card);
-    if (same) same.addEventListener("click", () => resolvePair(card, "same"));
-    if (distinct) distinct.addEventListener("click", () => resolvePair(card, "distinct"));
-  });
-}
-
-function renderReferenceReview(rows) {
-  const root = $("#reference-list");
-  if (!root) return;
-  if (!rows.length) {
-    root.innerHTML = `<div class="empty">No vague references need human resolution in this run.</div>`;
-    return;
-  }
-  root.innerHTML = rows.map(row => {
-    const candidates = row.candidate_targets || [];
-    const selected = row.selected_target_mention_id || row.recommended_target_mention_id || candidates[0]?.target_mention_id || "";
-    return `<article class="review-card reference-card" data-reference="${esc(row.resolution_id)}">
-      <div><span class="tag">${esc(row.status)}</span><h4>“${esc(row.surface_text)}”</h4><p>${esc(row.reason || "Choose the supported antecedent.")}</p></div>
-      <div><small>Exact surface-mention sentence</small><blockquote>“${esc(row.source.evidence_quote)}”</blockquote></div>
-      <div class="reference-options">
-        ${row.status === "pending" ? `<label><span>Resolved node</span><select>${candidates.map(candidate => `<option value="${esc(candidate.target_mention_id)}"${candidate.target_mention_id === selected ? " selected" : ""}>${esc(candidate.canonical_name)} · ${esc(candidate.label)} · ${candidate.sentence_distance === 0 ? "same sentence" : `${candidate.sentence_distance} sentence${candidate.sentence_distance === 1 ? "" : "s"} back`}</option>`).join("")}</select></label>` : `<strong>${esc(candidates.find(candidate => candidate.target_mention_id === row.selected_target_mention_id)?.canonical_name || "Ignored")}</strong>`}
-        <div class="antecedent-preview">${candidates.map(candidate => `<details${candidate.target_mention_id === selected ? " open" : ""}><summary>${esc(candidate.canonical_name)}</summary><blockquote>${esc(candidate.antecedent_evidence_quote)}</blockquote></details>`).join("")}</div>
-      </div>
-      ${row.status === "pending" ? `<div class="review-actions"><button class="button quiet reference-ignore" type="button">Ignore reference</button><button class="button blue reference-resolve" type="button">Resolve to selected node</button></div>` : ""}
-    </article>`;
-  }).join("");
-  $$(".reference-card", root).forEach(card => {
-    $(".reference-resolve", card)?.addEventListener("click", () => resolveReference(card, "resolve"));
-    $(".reference-ignore", card)?.addEventListener("click", () => resolveReference(card, "ignore"));
-  });
-}
-
-async function resolveReference(card, decision) {
-  const buttons = $$("button", card);
-  buttons.forEach(button => button.disabled = true);
-  try {
-    await api(`/api/jobs/${state.jobId}/reference-resolution`, {
-      method: "POST", headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({
-        resolution_id: card.dataset.reference,
-        decision,
-        target_mention_id: $("select", card)?.value || "",
-      }),
-    });
-    toast(decision === "resolve" ? "The surface mention now traces to the selected node." : "The unresolved reference was ignored.");
-    state.job = await api(`/api/jobs/${state.jobId}`);
-    renderResults(state.job);
-    activateTab("references");
-  } catch (error) {
-    toast(error.message);
-    buttons.forEach(button => button.disabled = false);
-  }
-}
-
-async function resolvePair(card, decision) {
-  const buttons = $$("button", card);
-  buttons.forEach(button => button.disabled = true);
-  try {
-    const chosen = $("select", card)?.value || "";
-    await api(`/api/jobs/${state.jobId}/resolution`, {
-      method: "POST", headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({resolution_id: card.dataset.resolution, decision, chosen_canonical_name: chosen}),
-    });
-    toast(decision === "same" ? `Merged under “${chosen}” and added aliases to the persistent lexicon.` : "Recorded as distinct nodes.");
-    state.job = await api(`/api/jobs/${state.jobId}`);
-    renderResults(state.job);
-    activateTab("similar");
-  } catch (error) {
-    toast(error.message);
-    buttons.forEach(button => button.disabled = false);
-  }
-}
 
 function renderReview(rows) {
   const root = $("#review-list");
   const labels = state.job?.ontology_labels || [];
   root.innerHTML = rows.length ? rows.map(row => `
     <article class="review-card node-review-card" data-candidate="${esc(row.candidate_id)}">
-      <div><span class="tag">${esc(row.label || "untyped")}</span><h4>${esc(row.canonical_name || row.surface_text)}</h4><p>${esc(row.extraction_method)}</p><small>Sentence ID: ${esc(row.source?.sentence_id || "MISSING")}</small></div>
+      <div><span class="tag">${esc(plainLabel(row.label || "type not chosen"))}</span><h4>${esc(row.canonical_name || row.surface_text)}</h4><details class="technical-disclosure"><summary>Technical details</summary><p>Method: ${esc(plainLabel(row.extraction_method))}<br>Sentence ID: ${esc(row.source?.sentence_id || "missing")}</p></details></div>
       <div><blockquote>"${esc(row.source?.evidence_quote || row.surface_text)}"</blockquote><span class="tag">page ${esc(row.source?.pages?.join(", ") || "unknown")}</span></div>
       <div class="node-review-fields">
-        <label><span>Ontology type</span><select class="node-review-label">${labels.map(label => `<option value="${esc(label)}"${label === row.label ? " selected" : ""}>${esc(label)}</option>`).join("")}</select></label>
-        <label><span>Canonical name</span><input class="node-review-name" value="${esc(row.canonical_name || row.surface_text)}"></label>
+        <label><span>Item type</span><select class="node-review-label">${labels.map(label => `<option value="${esc(label)}"${label === row.label ? " selected" : ""}>${esc(plainLabel(label))}</option>`).join("")}</select></label>
+        <label><span>Name to use</span><input class="node-review-name" value="${esc(row.canonical_name || row.surface_text)}"></label>
       </div>
-      <div class="review-actions"><button class="button quiet node-reject" type="button">Reject</button><button class="button blue node-accept" type="button">Accept node</button></div>
-    </article>`).join("") : `<div class="empty">No additional node phrases need human approval.</div>`;
+      <div class="review-actions"><button class="button quiet node-reject" type="button">Exclude</button><button class="button blue node-accept" type="button">Keep item</button></div>
+    </article>`).join("") : `<div class="empty">No other items need review.</div>`;
   $$(".node-review-card", root).forEach(card => {
     $(".node-accept", card)?.addEventListener("click", () => submitNodeReview(card, "accept"));
     $(".node-reject", card)?.addEventListener("click", () => submitNodeReview(card, "reject"));
@@ -408,7 +456,7 @@ async function submitNodeReview(card, decision) {
         canonical_name: $(".node-review-name", card)?.value || "",
       }),
     });
-    toast(result.decision === "accept" ? "Node accepted, added to the graph, and recorded in the persistent lexicon." : "Node rejected and excluded from the graph.");
+    toast(result.decision === "accept" ? "The item was kept." : "The item was excluded.");
     state.job = await api(`/api/jobs/${state.jobId}`);
     renderResults(state.job);
     activateTab("review");
@@ -420,29 +468,32 @@ async function submitNodeReview(card, decision) {
 
 function renderDownloads(files) {
   const descriptions = {
-    "parsed.json":"Immutable narrative-text parse", "grammatical_analysis.jsonl":"Complete token, POS, morphology, and dependency analysis",
-    "grammatical_triples.jsonl":"Predicate-first subject-predicate-object triples", "scibert_typings.jsonl":"Pretrained SciBERT ontology rankings",
-    "grammatical_stage.json":"Parser and SciBERT stage summary", "node_candidates.jsonl":"All high-recall node candidates",
-    "node_normalization_candidates.jsonl":"Deterministic cleanup plus same-type prior-node comparison options",
-    "candidate_judgments.jsonl":"Every accept, review, and reject decision", "mentions.jsonl":"Accepted mentions + exact evidence",
-    "node_review_candidates.jsonl":"Compatibility copy of the review queue", "review_queue.jsonl":"Candidates awaiting human approval",
-    "node_rejections.jsonl":"Rejected candidates with reasons", "canonical_entities.jsonl":"Pre-review canonical nodes",
-    "reference_resolution_review.jsonl":"Ambiguous vague mentions with finite antecedent choices",
-    "reference_resolution_ignored.jsonl":"Unresolved references excluded from the graph",
-    "canonical_entities_merged.jsonl":"Human-merged canonical nodes", "similar_nodes_review.jsonl":"Similarity features + decisions",
-    "lexicon_snapshot.json":"Lexicon used for this paper", "llm_node_judge_calls.jsonl":"Node-candidate local-model audit trail",
-    "llm_reference_judge_calls.jsonl":"Contextual SAME/DIFFERENT reference-pair audit trail",
-    "relationship_candidates.jsonl":"All context-window LLM proposals, endpoint selections, judgments, and gates",
-    "relationship_unknown_nodes.jsonl":"Relationship endpoints absent from the accepted node catalog",
+    "parsed.json":"Immutable narrative-text parse",
+    "raw_svo.jsonl":"Raw main-clause SVO plus separate sentence context",
+    "grammatical_triples.jsonl":"Raw subject-verb-object triples",
+    "paragraph_batches.jsonl":"Paragraph batches with subjects, objects, and context separated",
+    "scibert_typings.jsonl":"Advisory SciBERT ontology rankings, including NONE",
+    "node_candidates.jsonl":"Raw SVO candidates and three-pass node decisions",
+    "candidate_judgments.jsonl":"Every accepted, review, and disregard decision",
+    "mentions.jsonl":"Accepted mentions with exact evidence",
+    "review_queue.jsonl":"Nodes awaiting human approval",
+    "node_rejections.jsonl":"Disregarded nodes with reasons",
+    "canonical_entities_merged.jsonl":"Canonical accepted nodes",
+    "ollama_node_calls.jsonl":"Three-pass Qwen node audit trail",
+    "relationship_candidates.jsonl":"Generated, refined, validated paragraph relationships",
+    "relationship_unknown_nodes.jsonl":"Inferred endpoints awaiting human approval",
     "assertions.jsonl":"Accepted evidence-backed relationship assertions",
-    "relationship_rejections.jsonl":"Rejected candidates and failed gates",
-    "llm_relationship_judge_calls.jsonl":"Context-window relationship extraction and judgment audit trail",
+    "relationship_rejections.jsonl":"Rejected relationships and failed gates",
+    "ollama_relationship_calls.jsonl":"Qwen generation, refinement, and validation audit trail",
     "canonical_relationships.jsonl":"Canonical triples aggregated from accepted assertions",
-    "question_answerability.json":"Graph-only paper questions, answers, and exact supporting sentences",
-    "stage_outputs.json":"Status and output summary for every pipeline stage",
-    "semantic_completeness.json":"Recall-oriented checks for introduced systems, agents, models, connectivity, and traceability",
+    "question_answerability.json":"Graph questions and supporting sentences",
+    "semantic_completeness.json":"Recall-oriented completeness checks",
+    "generalization_diagnostics.json":"Graph coverage and quality diagnostics",
     "neo4j_upsert.json":"Verified Neo4j write receipt",
-    "validation_report.json":"Traceability and mode checks", "manifest.json":"Run summary and file index", "source.pdf":"Original paper",
+    "neo4j_removal.json":"Verified per-paper Neo4j removal receipt",
+    "validation_report.json":"Deterministic provenance checks",
+    "manifest.json":"Run summary and file index",
+    "source.pdf":"Original paper",
   };
   $("#download-grid").innerHTML = files.map(file => `
     <a class="download-card" href="/api/jobs/${state.jobId}/download/${encodeURIComponent(file)}">
@@ -459,14 +510,26 @@ async function loadHistory() {
   try {
     const payload = await api("/api/jobs");
     const select = $("#history-select");
-    select.innerHTML = `<option value="">Previous runs</option>` + payload.jobs.filter(row => row.status === "complete").map(row => {
+    const visibleJobs = payload.jobs.filter(row => row.status !== "failed");
+    select.innerHTML = `<option value="">Previous runs</option>` + visibleJobs.map(row => {
       const source = (row.summary?.paper?.title || row.summary?.source_filename || row.job_id).replace(/\.pdf$/i, "");
       const paper = source.length > 52 ? `${source.slice(0, 49)}...` : source;
       const stamp = new Date(row.summary?.created_at || row.created_at);
       const when = Number.isNaN(stamp.getTime()) ? "time unavailable" : stamp.toLocaleString([], {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"});
       const shortId = row.job_id.replace(/^run_/, "").slice(0, 15);
-      return `<option value="${esc(row.job_id)}">${esc(`${paper} | ${when} | ${shortId}`)}</option>`;
+      const status = row.status === "complete" ? "" : ` | ${row.status.toUpperCase()}`;
+      return `<option value="${esc(row.job_id)}">${esc(`${paper} | ${when} | ${shortId}${status}`)}</option>`;
     }).join("");
+    const active = payload.jobs.find(row => row.status === "running" || row.status === "queued");
+    if (!state.jobId && active) {
+      state.jobId = active.job_id;
+      select.value = active.job_id;
+      $("#results").hidden = true;
+      $("#run-button").disabled = true;
+      $$('[data-sample-button]').forEach(button => { button.disabled = true; });
+      updateRun(active);
+      pollJob();
+    }
   } catch (_) {}
 }
 
@@ -475,22 +538,60 @@ async function refreshGraphHealth() {
   try {
     const graph = await api("/api/graph/summary");
     const exact = graph.mentions === graph.grounded_mentions;
-    const references = graph.resolved_mentions === graph.linked_antecedents;
     const ontologyOnly = graph.operational_instance_nodes === 0 && graph.duplicate_canonical_keys === 0;
     const paperOnly = ontologyOnly && graph.materialized_ontology_nodes === 0;
     $("#graph-health-title").textContent = `${graph.canonical_entities} paper nodes and ${graph.semantic_relationships} extracted relationships`;
     const confidence = graph.nodes_with_confidence === 0 ? "no confidence node properties" : `${graph.nodes_with_confidence} nodes still carry confidence`;
-    $("#graph-health-detail").textContent = `${graph.materialized_ontology_nodes} materialized ontology nodes · ${graph.grounded_mentions}/${graph.mentions} mentions retain exact evidence · ${graph.linked_antecedents}/${graph.resolved_mentions} resolved references traced · ${confidence}${exact && references && paperOnly ? " · paper-only graph complete" : " · review needed"}`;
+    $("#graph-health-detail").textContent = `${graph.materialized_ontology_nodes} materialized ontology nodes · ${graph.grounded_mentions}/${graph.mentions} mentions retain exact evidence · ${confidence}${exact && paperOnly ? " · paper-only graph complete" : " · review needed"}`;
   } catch (_) {
     $("#graph-health-title").textContent = "Neo4j is unavailable";
     $("#graph-health-detail").textContent = "Start the local graph, then refresh this page.";
   }
 }
 
+function closeResetDialog() {
+  const dialog = $("#reset-graph-dialog");
+  if (dialog.open) dialog.close();
+  $("#reset-confirmation").value = "";
+  $("#confirm-graph-reset").disabled = true;
+}
+
+async function resetSharedGraph() {
+  const confirmation = $("#reset-confirmation").value;
+  if (confirmation !== "RESET") return;
+  const confirmButton = $("#confirm-graph-reset");
+  confirmButton.disabled = true;
+  confirmButton.textContent = "Removing graph data...";
+  try {
+    const result = await api("/api/graph/reset", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({confirmation}),
+    });
+    closeResetDialog();
+    const receipt = result.receipt || {};
+    toast(`Shared graph reset: ${number(receipt.nodes_removed)} nodes and ${number(receipt.relationships_removed)} relationships removed.`);
+    await refreshGraphHealth();
+    await loadHistory();
+    if (state.jobId) {
+      state.job = await api(`/api/jobs/${state.jobId}`);
+      renderResults(state.job);
+    }
+  } catch (error) {
+    toast(error.message);
+    confirmButton.disabled = $("#reset-confirmation").value !== "RESET";
+  } finally {
+    confirmButton.textContent = "Remove all graph data";
+  }
+}
+
 async function init() {
+  await loadModels();
   try {
     const status = await api("/api/status");
-    $("#footer-status").textContent = `Paper nodes + predicates + Neo4j | ${status.lexicon_entries} lexicon entries | graph on :7477`;
+    const modelsReady = Boolean(status.model_readiness && status.model_readiness.ready);
+    const memory = `${number(status.lexicon_entries)} prior node/type pairs`;
+    $("#footer-status").textContent = modelsReady ? `Ready · models loaded · ${memory}` : `Ready · ${memory}`;
     await refreshGraphHealth();
   } catch (_) {
     $("#footer-status").textContent = "Workbench service unavailable";
@@ -502,25 +603,51 @@ async function init() {
 
 $("#choose-button").addEventListener("click", () => $("#pdf-input").click());
 $("#pdf-input").addEventListener("change", event => chooseFile(event.target.files[0]));
+$("#model-select").addEventListener("change", event => {
+  state.llmModel = event.target.value;
+});
 const dropzone = $("#dropzone");
 ["dragenter","dragover"].forEach(type => dropzone.addEventListener(type, event => { event.preventDefault(); dropzone.classList.add("drag"); }));
 ["dragleave","drop"].forEach(type => dropzone.addEventListener(type, event => { event.preventDefault(); dropzone.classList.remove("drag"); }));
 dropzone.addEventListener("drop", event => chooseFile(event.dataTransfer.files[0]));
 $("#run-button").addEventListener("click", () => {
-  const form = new FormData(); form.append("paper", state.file); begin("/api/extract", {method:"POST", body:form});
+  const form = new FormData();
+  form.append("paper", state.file);
+  form.append("model", state.llmModel);
+  begin("/api/extract", {method:"POST", body:form});
 });
-$("#sample-button").addEventListener("click", () => begin("/api/extract/sample", {method:"POST"}));
-$("#epanet-sample-button").addEventListener("click", () => begin("/api/extract/sample/epanet-agentic", {method:"POST"}));
+$("#sample-button").addEventListener("click", () => begin(`/api/extract/sample?model=${encodeURIComponent(state.llmModel)}`, {method:"POST"}));
+$("#epanet-sample-button").addEventListener("click", () => begin(`/api/extract/sample/epanet-agentic?model=${encodeURIComponent(state.llmModel)}`, {method:"POST"}));
 $("#copy-graph-query").addEventListener("click", async () => {
   if (!state.graphQuery) return;
   await navigator.clipboard.writeText(state.graphQuery);
   toast("Neo4j query copied. Open Neo4j and press Ctrl+V, then Ctrl+Enter.");
 });
+$("#add-to-graph").addEventListener("click", () => graphAction("add"));
+$("#remove-from-graph").addEventListener("click", () => graphAction("remove"));
+$("#reset-graph-button").addEventListener("click", () => {
+  $("#reset-graph-dialog").showModal();
+  $("#reset-confirmation").focus();
+});
+$("#reset-confirmation").addEventListener("input", event => {
+  $("#confirm-graph-reset").disabled = event.target.value !== "RESET";
+});
+$("#confirm-graph-reset").addEventListener("click", resetSharedGraph);
+$("#cancel-graph-reset").addEventListener("click", closeResetDialog);
+$("#reset-graph-dialog").addEventListener("cancel", event => {
+  event.preventDefault();
+  closeResetDialog();
+});
 $("#history-select").addEventListener("change", async event => {
   if (!event.target.value) return;
   state.jobId = event.target.value;
   state.job = await api(`/api/jobs/${state.jobId}`);
-  updateRun(state.job); renderResults(state.job);
+  updateRun(state.job);
+  if (state.job.status === "complete") renderResults(state.job);
+  else {
+    $("#results").hidden = true;
+    pollJob();
+  }
 });
 $$(".tab").forEach(tab => tab.addEventListener("click", () => activateTab(tab.dataset.tab)));
 $$(".relation-filter").forEach(button => button.addEventListener("click", () => {

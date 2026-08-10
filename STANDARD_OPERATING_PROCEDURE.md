@@ -1,320 +1,296 @@
-# Engineered Water Systems Pipeline — Standard Operating Procedure
+# Standard operating procedure: install and run the paper-to-graph pipeline
 
-## 1. Purpose and scope
+## 1. Purpose
 
-This SOP explains how to set up and operate the local paper-to-knowledge-graph project. It covers:
+This SOP covers a clean Windows installation, acquisition of every required local model and database asset, environment verification, routine paper processing, graph publication, and synchronization of the persistent node/type lexicon through GitHub.
 
-1. starting the complete website/workbench;
-2. running the pipeline directly, without the website;
-3. starting the local Neo4j graph database; and
-4. opening, querying, and confirming the graph.
+The maintained stack is:
 
-Run all commands from the repository root (`LLP Project`) in PowerShell unless stated otherwise.
-The checked-in local configuration is for development only: Neo4j authentication is disabled and
-all services listen on localhost.
+- Python 3.11 or 3.12 for the pipeline and local website.
+- spaCy `en_core_web_sm` for grammatical parsing.
+- SciBERT `allenai/scibert_scivocab_uncased` for advisory ontology typing.
+- Ollama with `qwen3:4b-instruct` for local structured LLM extraction.
+- Neo4j Community Edition with Java 21 for the shared graph.
 
-## 2. Service map
+All commands below assume PowerShell is open at the repository root.
 
-| Component | Address | Purpose |
-|---|---|---|
-| Workbench website | `http://127.0.0.1:8767/` | Upload papers, monitor extraction, review results, and publish/remove papers |
-| Workbench-hosted Neo4j Browser | `http://127.0.0.1:8767/neo4j-browser/?connectURL=bolt%3A%2F%2Flocalhost%3A7690&db=neo4j` | Visually explore the graph and run Cypher |
-| Neo4j HTTP | `http://127.0.0.1:7477/` | Database HTTP endpoint |
-| Neo4j Bolt | `bolt://127.0.0.1:7690` | Neo4j Browser/database connection |
-| Ollama API | `http://127.0.0.1:11434/` | Local DeepSeek inference |
+## 2. Required assets
 
-## 3. One-time workstation setup
+Install or obtain the following before processing a paper:
 
-### 3.1 Install system prerequisites
+1. Git and access to the project repository.
+2. Python 3.11 or 3.12 from the official Python distribution.
+3. [Ollama for Windows](https://docs.ollama.com/windows). Ollama serves its local API at `http://127.0.0.1:11434` by default.
+4. The `qwen3:4b-instruct` Ollama model.
+5. A Java 21 JDK.
+6. The Windows ZIP distribution of [Neo4j Community Edition](https://neo4j.com/docs/operations-manual/current/installation/windows/).
+7. Internet access during initial Python package, Qwen, and SciBERT downloads. Routine extraction is local after these assets are cached.
+8. One or more text-based scientific PDFs. Scanned image-only PDFs require OCR before this pipeline can extract their text.
 
-Install:
+The repository tracks configuration, ontology files, source code, and `Pipeline/GENERAL/lexicon/nodes.json`. It does not track the virtual environment, model caches, Ollama models, Neo4j installation, Neo4j data, uploaded PDFs, or generated run artifacts.
 
-- Python 3.11 or 3.12 (64-bit);
-- Java 21 or 25; and
-- Ollama.
-
-Confirm that the Python launcher and Java are available:
+## 3. Clone and install Python dependencies
 
 ```powershell
-py -3.12 --version
-java -version
+git clone https://github.com/ohuang009/LLP-Project.git '.\LLP Project'
+Set-Location '.\LLP Project'
+python -m venv .venv
+Set-ExecutionPolicy -Scope Process Bypass
+& .\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-If `py` is not recognized, install Python from python.org and enable the Python launcher during
-installation. Do not use Python 3.13 for this project unless the supported range is updated.
+Confirm `python --version` reports Python 3.11 or 3.12 before creating the environment. If the installer exposes only the Windows launcher, use `py -3.12 -m venv .venv` instead. Activate `.venv` in every new PowerShell session before running pipeline commands.
 
-### 3.2 Create the Python environment
+## 4. Install and verify Ollama/Qwen
 
-Using the environment's Python executable directly avoids PowerShell activation-policy issues:
-
-```powershell
-py -3.12 -m venv .venv
-& .\.venv\Scripts\python.exe -m pip install --upgrade pip
-& .\.venv\Scripts\python.exe -m pip install -r .\requirements.txt
-& .\.venv\Scripts\python.exe -m spacy validate
-```
-
-Expected result: `en_core_web_sm` is installed and compatible. If it is missing:
-
-```powershell
-& .\.venv\Scripts\python.exe -m spacy download en_core_web_sm
-```
-
-### 3.3 Download SciBERT
-
-The first pipeline run downloads SciBERT automatically. Pre-download it before an offline run:
-
-```powershell
-& .\.venv\Scripts\python.exe -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('allenai/scibert_scivocab_uncased', cache_folder='Pipeline/GENERAL/cache/scibert')"
-```
-
-Expected cache location:
-
-```text
-Pipeline/GENERAL/cache/scibert/models--allenai--scibert_scivocab_uncased/
-```
-
-### 3.4 Download the configured local LLMs
-
-Start the Ollama desktop application, then run:
+Install Ollama from its official Windows installer, then download the configured model. The model name must match `Pipeline/GENERAL/config/pipeline.json` unless `--model` is supplied for a run.
 
 ```powershell
 ollama pull qwen3:4b-instruct
-ollama pull deepseek-r1:7b
 ollama list
+Invoke-RestMethod http://127.0.0.1:11434/api/tags
 ```
 
-Both models should appear in the list. The current node configuration uses `qwen3:4b-instruct`
-for automated node adjudication, while full relationship extraction requires `deepseek-r1:7b`.
-The configuration files are authoritative if these names change. If the desktop application is
-not running the API, keep this command open in its own terminal:
+The Ollama Windows application normally runs in the background after launch. If the API is not responding, launch Ollama from the Start menu or run `ollama serve` in a separate terminal. The official [model-pull API documentation](https://docs.ollama.com/api/pull) describes the same download operation programmatically.
+
+## 5. Download and verify the SciBERT asset
+
+The production configuration uses `scibert_local_files_only: true`, so the model must be downloaded once into the repository-local ignored cache before the pipeline starts.
 
 ```powershell
-ollama serve
+python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('allenai/scibert_scivocab_uncased', cache_folder=r'Pipeline/GENERAL/cache/scibert'); print('SciBERT downloaded')"
+python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('allenai/scibert_scivocab_uncased', cache_folder=r'Pipeline/GENERAL/cache/scibert', local_files_only=True); print('SciBERT local cache OK')"
 ```
 
-### 3.5 Check the Neo4j configuration after moving the repository
+Do not commit `Pipeline/GENERAL/cache/`; each workstation keeps its own model cache.
 
-The development instance configuration is:
+## 6. Install and configure Neo4j
 
-```text
-LocalNeo4j/instances/engineered-water-ontology/conf/neo4j.conf
-```
+Follow Neo4j's official [Windows ZIP installation procedure](https://neo4j.com/docs/operations-manual/current/installation/windows/): install Java 21, extract Neo4j Community Edition outside the repository, and set `NEO4J_HOME` to the extracted directory.
 
-Its `server.directories.*` settings contain absolute Windows paths. If the repository is copied
-or moved, update those paths before starting Neo4j. Keep the database, logs, run, import, plugins,
-and temporary directories under the same `engineered-water-ontology` instance folder.
-
-## 4. Daily full-stack startup
-
-Use three PowerShell terminals. Leave each foreground process running.
-
-### Terminal 1 — start Neo4j
+For each PowerShell session:
 
 ```powershell
-$env:NEO4J_CONF = (Resolve-Path ".\LocalNeo4j\instances\engineered-water-ontology\conf").Path
-& ".\LocalNeo4j\runtime\neo4j-community-2026.06.0\bin\neo4j-admin.bat" server console
+$env:NEO4J_HOME = 'C:\Tools\neo4j-community-<VERSION>'
+$env:NEO4J_CONF = (Resolve-Path '.\LocalNeo4j\config').Path
+java -version
+& "$env:NEO4J_HOME\bin\neo4j-admin.bat" server validate-config
 ```
 
-Wait until the terminal reports that Neo4j has started. A normal start exposes HTTP on `7477`
-and Bolt on `7690`. Do not start a second copy: a `store_lock` error usually means the configured
-database is already running.
+Before first startup on a new clone, open `LocalNeo4j/config/neo4j.conf` and change every absolute `server.directories.*` path and the `java.io.tmpdir` path to the current repository location. Neo4j documents its directory settings in [File locations](https://neo4j.com/docs/operations-manual/current/configuration/file-locations/).
 
-### Terminal 2 — confirm or start Ollama
+Start Neo4j in a dedicated terminal and leave it running:
 
-First check the API:
+```powershell
+& "$env:NEO4J_HOME\bin\neo4j.bat" console
+```
+
+This repository's tracked configuration exposes only localhost:
+
+- Browser/HTTP: `http://127.0.0.1:7477/`
+- Bolt: `bolt://127.0.0.1:7690`
+
+Authentication is disabled in this local development configuration. Do not change the listen address to a network-accessible interface without enabling authentication and reviewing Neo4j security settings.
+
+## 7. Return to the project after closing PowerShell
+
+Closing PowerShell does not remove the installed dependencies, downloaded models, virtual environment, lexicon, or Neo4j data. It only clears the current directory, virtual-environment activation, and session-only environment variables.
+
+In every new PowerShell window that you will use for pipeline or website commands, run:
+
+```powershell
+Set-Location 'C:\Users\ohuan\Downloads\LLP Project'
+Set-ExecutionPolicy -Scope Process Bypass
+& .\.venv\Scripts\Activate.ps1
+python --version
+python -m Pipeline --help
+```
+
+When activation succeeds, the prompt normally begins with `(.venv)`. That window is now ready to run the website or any `python -m Pipeline ...` command. Do not run `pip install` again during routine startup.
+
+Ollama usually continues running in the Windows background. Check it with:
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:11434/api/tags
 ```
 
-If it is unavailable, start the Ollama desktop application or run:
+If that request fails, launch Ollama from the Windows Start menu. Alternatively, run `ollama serve` in another PowerShell window and leave it open.
+
+Neo4j is needed only when using graph features such as publishing, viewing graph counts, removing a paper, or resetting the graph. When needed, open a separate PowerShell window and run:
 
 ```powershell
-ollama serve
+$env:NEO4J_HOME = 'C:\Tools\neo4j-community-<VERSION>'
+$env:NEO4J_CONF = (Resolve-Path 'C:\Users\ohuan\Downloads\LLP Project\LocalNeo4j\config').Path
+
+& "$env:NEO4J_HOME\bin\neo4j.bat" console
 ```
 
-### Terminal 3 — verify the environment and start the website
+Replace the `NEO4J_HOME` example with the directory where Neo4j was actually extracted. The Neo4j console occupies that window until it is stopped with `Ctrl+C`; run website or pipeline commands in the first window.
+
+To run the complete environment check in the first window, set the same Neo4j variables there without running `neo4j console`:
 
 ```powershell
-& .\.venv\Scripts\python.exe .\Pipeline\check_environment.py --mode full
-& .\.venv\Scripts\python.exe -m Pipeline.GENERAL.node_only_server
+$env:NEO4J_HOME = 'C:\Tools\neo4j-community-<VERSION>'
+$env:NEO4J_CONF = (Resolve-Path '.\LocalNeo4j\config').Path
+python -m Pipeline.check_environment
 ```
 
-Despite the historical `node_only_server` module name, this is the current full workbench and
-runs node and relationship extraction. Expected startup output includes:
+If the repository is moved or cloned elsewhere, replace `C:\Users\ohuan\Downloads\LLP Project` in these commands and update the absolute paths in `LocalNeo4j/config/neo4j.conf` as described in section 6. You do not need to reinstall packages or redownload models every time PowerShell is reopened.
 
-```text
-Engineered Water Systems Paper Graph Workbench: http://127.0.0.1:8767/
-LLM context-window relationship extraction is enabled.
-```
+## 8. Verify the complete environment
 
-Open `http://127.0.0.1:8767/` in a browser.
-
-## 5. Run a paper through the website
-
-1. Confirm the page's **Shared graph maintenance** section does not say Neo4j is unavailable.
-2. Select or drag in a PDF smaller than 80 MB.
-3. Start extraction and keep Terminal 3 open.
-4. Wait for every stage to complete. Full-paper DeepSeek processing can be slow on CPU.
-5. Review pending nodes, references, and possible duplicate entities where applicable.
-6. Inspect the validation and downloaded artifacts.
-7. To persist the evaluated paper, click **Save to shared graph**.
-8. After the save completes, click **View saved results** or **Open shared graph**.
-
-An evaluated run is not added to Neo4j automatically. Saving is an explicit, one-time action.
-Once a run is saved and later removed, that same run cannot be saved again. **Reset shared graph**
-deletes every node and relationship and marks all previously saved runs as removed; use it only
-when a complete graph reset is intended.
-
-Generated run evidence is stored under:
-
-```text
-PipelineAudits/runs/<run_id>/
-```
-
-The main completion checks are `manifest.json` and `validation_report.json`. A full run also
-contains `canonical_entities_merged.jsonl` and `canonical_relationships.jsonl`.
-
-## 6. Run the pipeline locally without the website
-
-The direct commands below execute the pipeline in the foreground and write the same audit-style
-run directory. They do not start an HTTP server and do not automatically publish to Neo4j.
-
-### 6.1 Full nodes-and-relationships run
-
-Requirements: Python environment, SciBERT, the Ollama API, and both configured models
-(`qwen3:4b-instruct` for node adjudication and `deepseek-r1:7b` for relationships). Neo4j is not
-required merely to produce and evaluate the files.
-
-Set an input PDF and unique output directory, then run the public full-pipeline entry point:
+With Ollama and Neo4j running and the virtual environment activated:
 
 ```powershell
-$pdf = (Resolve-Path ".\SamplePapers\evaluation\refinement\01_waterrag.pdf").Path
-$runDir = Join-Path ".\PipelineAudits\runs" ("manual_full_" + (Get-Date -Format "yyyyMMddTHHmmss"))
-& .\.venv\Scripts\python.exe -c "import sys; from pathlib import Path; from Pipeline import run_extraction; summary=run_extraction(Path(sys.argv[1]), Path(sys.argv[2]), lambda stage,message,percent,*rest: print(f'[{percent:3}%] {stage}: {message}', flush=True)); print(summary['counts'])" "$pdf" "$runDir"
+python -m Pipeline.check_environment
 ```
 
-Replace the value of `$pdf` with any local PDF. Success criteria:
+Do not start a production run until every line reports `PASS`. This check loads spaCy and SciBERT, validates the persistent lexicon, confirms the configured Qwen model through the Ollama API, and verifies Java and `NEO4J_HOME`.
 
-- the command reaches `100% complete`;
-- `$runDir\manifest.json` exists;
-- `$runDir\validation_report.json` reports `"status": "PASS"`; and
-- `$runDir\canonical_relationships.jsonl` exists.
-
-### 6.2 Node-only run
-
-Use this when relationships are intentionally out of scope. Ollama is optional in this mode;
-without it, untrusted node candidates remain in the review artifacts. Neo4j is not required.
+Run the automated tests after initial setup and after code changes:
 
 ```powershell
-$pdf = (Resolve-Path ".\SamplePapers\evaluation\refinement\01_waterrag.pdf").Path
-$runDir = Join-Path ".\PipelineAudits\runs" ("manual_nodes_" + (Get-Date -Format "yyyyMMddTHHmmss"))
-& .\.venv\Scripts\python.exe -c "import sys; from pathlib import Path; from Pipeline import run_node_only_extraction; summary=run_node_only_extraction(Path(sys.argv[1]), Path(sys.argv[2]), lambda stage,message,percent: print(f'[{percent:3}%] {stage}: {message}', flush=True)); print(summary['counts'])" "$pdf" "$runDir"
+python -m unittest discover -s .\Pipeline\GENERAL\tests -p 'test_*.py'
+python -m unittest discover -s .\Pipeline\Paper_Parsing\tests -p 'test_*.py'
 ```
 
-A node-only run should have `"relationship_extraction": "disabled_by_node_only_boundary"` in
-`manifest.json` and will not create semantic relationships.
+## 9. Choose one of two operating paths
 
-### 6.3 Review or publish a command-line run later
+Both paths use the same pipeline and persistent lexicon. Choose the website when you want the complete guided extraction, review, and graph workflow. Choose command lines when you want to run individual stages or automate runs.
 
-The website loads completed runs from `PipelineAudits/runs/` when it starts. To use the normal
-review and one-time publication controls for a command-line run, start or restart the website,
-open that run, review it, and click **Save to shared graph**. This keeps the manifest and Neo4j
-publication receipts consistent.
+### Path 1: open the website and run the pipeline there
 
-## 7. Start and verify the graph only
-
-Start Neo4j using the Terminal 1 command in section 4. Then verify both ports:
+1. Prepare the command window using section 7.
+2. Confirm Ollama is running.
+3. Start Neo4j in its separate window if you plan to publish or inspect the graph.
+4. Start the website:
 
 ```powershell
-Test-NetConnection 127.0.0.1 -Port 7477 -InformationLevel Quiet
-Test-NetConnection 127.0.0.1 -Port 7690 -InformationLevel Quiet
+python -m Pipeline --stage server
 ```
 
-Both commands should return `True`. The website provides a more useful graph-health check once it
-is running:
+5. Leave that PowerShell window open and open `http://127.0.0.1:8767/` in a browser.
+6. Select or upload a PDF, select the installed Ollama model, and start extraction.
+7. Review queued nodes and inferred relationship endpoints in the website.
+8. Use **Save to shared graph** only after review. Neo4j must be running for this step.
+
+The website preloads spaCy and SciBERT before accepting work and displays the number of prior node/type pairs in the footer. Stop the website with `Ctrl+C`.
+
+### Path 2: run pipeline stages from command lines
+
+Prepare the command window using section 7, then run whichever stage is required. Use a unique output directory for every new paper.
+
+| Stage | Purpose | Additional service required |
+|---|---|---|
+| `parse` | Extract PDF structure and source text only | None |
+| `nodes` | Parse and extract typed nodes | Ollama |
+| `relationships` | Add relationships to an existing node run | Ollama |
+| `full` | Parse, extract nodes, and extract relationships | Ollama |
+| `publish` | Publish a completed run to the graph | Neo4j |
+| `graph-summary`, `remove-paper`, `reset-graph` | Maintain the graph | Neo4j |
+
+#### Full command-line extraction
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:8767/api/graph/summary
+python -m Pipeline --stage full --input '.\papers\paper.pdf' --output '.\PipelineAudits\runs\paper-001'
 ```
 
-This reports canonical entity, relationship, evidence, duplicate, and latest-run counts.
+This parses the PDF, extracts and types nodes, updates the persistent lexicon after node extraction succeeds, extracts relationships, and writes auditable artifacts. It does not publish to Neo4j.
 
-## 8. Open and view the graph
+#### Node-only extraction
 
-1. Keep both Neo4j and the workbench website running.
-2. Open the [local Neo4j Browser](http://127.0.0.1:8767/neo4j-browser/?connectURL=bolt%3A%2F%2Flocalhost%3A7690&db=neo4j).
-3. Use `bolt://localhost:7690` and database `neo4j` if a connection form appears. Authentication
-   is disabled in this localhost-only development configuration.
-4. Paste a Cypher query into the command bar and press `Ctrl+Enter`.
-
-Show a sample of the complete paper graph:
-
-```cypher
-MATCH p=(source)-[relationship]-(target)
-WHERE source.nodeKind = 'ontology_entity'
-  AND target.nodeKind = 'ontology_entity'
-RETURN p
-LIMIT 150
+```powershell
+python -m Pipeline --stage nodes --input '.\papers\paper.pdf' --output '.\PipelineAudits\runs\paper-001-nodes'
 ```
 
-Show node and relationship totals:
+The node-only stage also updates the lexicon after successful completion.
 
-```cypher
-MATCH (n)
-WITH count(n) AS nodes
-MATCH ()-[r]->()
-RETURN nodes, count(r) AS relationships
+#### Other supported stages
+
+```powershell
+# Parse without node extraction; this does not update the lexicon.
+python -m Pipeline --stage parse --input '.\papers\paper.pdf' --output '.\PipelineAudits\runs\paper-001-parse'
+
+# Add relationships to an existing node run; this does not update the lexicon.
+python -m Pipeline --stage relationships --output '.\PipelineAudits\runs\paper-001-nodes'
+
+# Inspect graph counts.
+python -m Pipeline --stage graph-summary --json
 ```
 
-Show ontology-type counts for saved paper entities:
+Command-line extraction writes the same run artifacts used by the website. If a command-line run produces review candidates, start the website afterward to perform human review before publishing.
 
-```cypher
-MATCH (entity)
-WHERE entity.nodeKind = 'ontology_entity'
-RETURN entity.ontologyClass AS ontologyClass, count(*) AS entities
-ORDER BY entities DESC
+## 10. Review and publish
+
+Nodes marked `needs_review` do not enter accepted mentions until a reviewer accepts them. A human acceptance through the website immediately adds that canonical node/type pair to the lexicon. Rejected items are never added.
+
+Publishing a completed run to Neo4j is always a separate action:
+
+```powershell
+python -m Pipeline --stage publish --output '.\PipelineAudits\runs\paper-001'
 ```
 
-For a specific paper, the workbench generates a document-scoped query under **Manual database
-query**. Copy that query, open Neo4j Browser, paste it, and press `Ctrl+Enter`.
+Use the website for the preferred review-and-publish workflow. Do not publish a run until its node and relationship review queues have been checked.
 
-If the Browser displays no nodes, first confirm that a completed paper was explicitly saved to
-the shared graph. Pipeline evaluation by itself leaves Neo4j unchanged.
+Graph removal commands are destructive. Record the document and run identifiers before removal:
 
-## 9. Normal shutdown
-
-1. Stop the workbench in Terminal 3 with `Ctrl+C`.
-2. Stop `ollama serve` with `Ctrl+C` if it was started manually. The desktop Ollama application
-   may remain running for later use.
-3. Stop Neo4j in Terminal 1 with `Ctrl+C` and wait for shutdown to complete.
-
-Do not terminate Java while Neo4j is writing. A controlled `Ctrl+C` shutdown reduces the risk of
-database recovery or lock issues on the next start.
-
-## 10. Troubleshooting checklist
-
-| Symptom | Check and corrective action |
-|---|---|
-| `.venv\Scripts\python.exe` is missing | Repeat section 3.2 with Python 3.11 or 3.12. |
-| `check_environment.py` reports SciBERT missing | Run the explicit download command in section 3.3 while online. |
-| Ollama API/model failure | Start Ollama, run `ollama list`, and pull `qwen3:4b-instruct` and `deepseek-r1:7b` if absent. |
-| `store_lock` when starting Neo4j | Test ports `7477` and `7690`; another copy is normally already running. Do not delete the lock file while a Java process owns the database. |
-| Neo4j fails after the repository was moved | Update the absolute `server.directories.*` paths in `neo4j.conf`. |
-| Website cannot bind to port `8767` | Test the port; an existing workbench process may already be running. Stop that process cleanly before restarting. |
-| Website says Neo4j is unavailable | Start Neo4j and confirm both configured ports. Refresh the page afterward. |
-| Graph is empty after a successful extraction | The paper has only been evaluated. Open its results and click **Save to shared graph**. |
-| Full direct run stops during relationship extraction | Confirm Ollama is reachable and the relationship model configured in `relationship_extraction.json` (`deepseek-r1:7b` currently) is installed. |
-| Browser assets are unavailable | Confirm the bundled runtime contains `LocalNeo4j/runtime/neo4j-community-2026.06.0/web/neo4j-browser-*.zip` and keep the workbench running. |
-
-## 11. POSIX command substitutions
-
-The project is currently configured for its Windows location. On Linux/macOS, after updating
-`neo4j.conf` paths, activate the environment with `. .venv/bin/activate`, replace
-`.venv\Scripts\python.exe` with `python`, and start Neo4j with:
-
-```bash
-export NEO4J_CONF="$PWD/LocalNeo4j/instances/engineered-water-ontology/conf"
-"$PWD/LocalNeo4j/runtime/neo4j-community-2026.06.0/bin/neo4j-admin" server console
+```powershell
+python -m Pipeline --stage remove-paper --document-id '<DOCUMENT-ID>' --run-id '<RUN-ID>'
+python -m Pipeline --stage reset-graph --confirm RESET
 ```
+
+`reset-graph` removes the entire local graph and should be used only when that is the intended outcome.
+
+## 11. Maintain the persistent lexicon in GitHub
+
+The lexicon is `Pipeline/GENERAL/lexicon/nodes.json`. It stores only previously accepted pairs in this form:
+
+```json
+[
+  {
+    "name": "EPANET",
+    "type": "Tool"
+  }
+]
+```
+
+Its rules are:
+
+- Exact normalized node names retrieve prior types for the next paper.
+- Prior types are advisory; current paper evidence can produce a different type.
+- Different valid types for the same name are preserved as separate pairs.
+- No alias, definition, source, timestamp, paper identifier, confidence, or count is stored.
+- A node pass that fails before producing accepted entities does not update the file; later relationship-stage failure does not erase node progress already recorded for that paper.
+
+After each reviewed paper, inspect, commit, and push the lexicon so it persists across machines and uses:
+
+```powershell
+git diff -- Pipeline/GENERAL/lexicon/nodes.json
+git add Pipeline/GENERAL/lexicon/nodes.json
+git commit -m 'data: update persistent node type lexicon'
+git push
+```
+
+The pipeline saves the file locally; GitHub persistence requires this normal commit-and-push step. Before starting a new batch on another workstation, pull the latest repository changes.
+
+Avoid processing papers concurrently in separate clones without coordinating lexicon updates. If Git reports a conflict, retain the union of unique `{name, type}` pairs, keep the file as a valid JSON array, then rerun the lexicon and pipeline tests before committing.
+
+## 12. Routine shutdown and backup
+
+1. Wait for the current paper run to finish.
+2. Review and commit the changed lexicon.
+3. Stop the website with `Ctrl+C`.
+4. Stop the Neo4j console with `Ctrl+C` and allow shutdown to complete.
+5. Exit Ollama from the system tray when local model service is no longer needed.
+6. Back up `LocalNeo4j/storage/` separately if the local graph must be recoverable. It is intentionally ignored by Git.
+
+## 13. Troubleshooting
+
+- **Ollama unavailable or model missing:** start Ollama, run `ollama pull qwen3:4b-instruct`, and confirm `/api/tags` lists the exact configured name.
+- **SciBERT cannot be loaded offline:** repeat both commands in section 5 while internet access is available and confirm the second local-only command succeeds.
+- **spaCy model missing:** reactivate `.venv` and rerun `pip install -r requirements.txt`.
+- **Neo4j fails validation:** confirm Java 21, `NEO4J_HOME`, `NEO4J_CONF`, and every absolute path in `LocalNeo4j/config/neo4j.conf`.
+- **Port already in use:** stop the process using 7477 or 7690, or update both the tracked Neo4j configuration and the pipeline's Neo4j connection settings together.
+- **Lexicon validation fails:** ensure the root is a JSON array and every row contains exactly `name` and a valid ontology `type`.

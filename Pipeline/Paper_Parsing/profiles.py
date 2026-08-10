@@ -69,10 +69,12 @@ GENERIC = ParsingProfile(id="generic_research_paper", publisher=None, back_matte
 
 
 def compact_label(text: str) -> str:
+    """Compact label. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     return re.sub(r"[^a-z0-9]+", "", text.lower())
 
 
 def visible_heading(text: str) -> str:
+    """Handle visible heading for this stage. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     visible = re.sub(r"^[^A-Za-z0-9]+\s*", "", text).strip()
     # Small-caps fonts are sometimes extracted with a space after the first
     # capital of every word: `I. I NTRODUCTION` or `R ELATED W ORK`.
@@ -80,6 +82,7 @@ def visible_heading(text: str) -> str:
 
 
 def detect_profile(lines: list) -> ParsingProfile:
+    """Detect profile. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     sample_lines = [line.text for line in lines[:400]]
     sample = " ".join(sample_lines).lower()
     if "environmental science & technology" in sample or "environscitechnol" in compact_label(sample):
@@ -109,6 +112,7 @@ def is_profile_heading(
     text: str, profile: ParsingProfile, *, size: float | None = None,
     body_size: float | None = None, bold: bool = False, italic: bool = False,
 ) -> bool:
+    """Check whether profile heading. It helps convert diverse PDF layouts into clean, sentence-addressable paper text."""
     clean = visible_heading(text).strip()
     if clean.upper() in profile.unnumbered_headings:
         return True
